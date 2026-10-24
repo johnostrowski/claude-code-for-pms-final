@@ -127,4 +127,13 @@ I'm the new PM for **Rook Dispatch**, taking over from Priya Raghunathan (left
   responder, without over-building.
 - **Chase Ravi** for the weekly reports and per-responder numbers.
 - **Roadmap:** re-own all items, and agree with Helen which deferred 4.2 items stay in Q3.
-- Write down how Dispatch decides who gets pinged (no doc exists).
+- **Delegated to Wen:** write down how Dispatch decides who gets pinged (no doc
+  exists). She does it alongside confirming the mechanism with me.
+
+Module 1 notes: every wiki page has now been read. The person pages hold nothing
+beyond the Team directory. The richest evidence was the `pings` table, week by
+week per responder, plus `config.py`, `history.py` and `offer.py`. Watch Halfmoon
+and Corporal Ashgrove: their pings are sliding more slowly (about 11 → 8 a week).
+Still open: why those four missed more in the release week (the interviews hint
+at distance from the phone). The Module 04–06 files in the repo state course
+conclusions ahead of time. Treat them as course material, not Rook evidence.
