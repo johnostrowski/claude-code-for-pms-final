@@ -67,6 +67,17 @@ They're course material, not Rook evidence.
     anyone under 60% taken slides to zero.
   - Nothing lets the score recover (Wen's 2019 TODO).
   - So the 60s wait caused misses, scores sank, and the bottom of the list is rarely asked.
+- **Score rebuilt from the pings** (Module 3, code rules; proximity and tags not
+  in the database): the replay puts exactly the quiet four at 0, and everyone else
+  at 0.72 or above. The fall is gradual, though. Mite went 1.00 (11 Aug) → 0.52
+  (16 Aug) → 0.28 (22 Aug) → 0.04 (29 Aug). Vesper went 0.96 → 0.04 (26 Aug).
+  The Gale and Captain Vantage dipped to about 0.6 and recovered.
+  So the score explains why they can't climb back, not why their pings dropped first.
+- **Open: Vesper in Old Town.** She was asked first on 19 of 21 Old Town callouts
+  in the two weeks before 4.2, then on 0 of 6 in the release week, while her score
+  was still 0.8–0.96. Captain Vantage, Nightwell and The Longcast were asked ahead
+  of her. Old Town's volume held (about 11 → 10 a week). Not explained by the
+  acceptance score. Likely the reweighting or proximity, which we can't see. Ask Wen.
 - **"Seasonal" doesn't hold:** early August was normal (77.9%). The drop starts
   in the release week.
 - **The aggregate hides it:** it was back up to 72.7% by 31 Aug, partly because
@@ -110,7 +121,8 @@ They're course material, not Rook evidence.
 3. **End-of-season "one more thing":** dark mode (4 tickets + Kip).
 
 ### Open actions
-- **Delegated to Wen:** write down how Dispatch decides who gets pinged.
+- **Delegated to Wen:** write down how Dispatch decides who gets pinged, and
+  explain why Vesper lost first place in Old Town on day one of 4.2.
 - **Tracking epic:** capture answer time, tags, score history and overrides.
   Enough for per-responder acceptance, time-to-accept and coverage gap. No more.
 - Chase Ravi. Re-own the roadmap, and agree with Helen which deferred 4.2 items stay in Q3.
@@ -123,3 +135,16 @@ Module 2 notes:
 - **Roadmap fit:** only 3 of the 8 interview complaint groups touch the roadmap.
   Only the handler phone app helps. Ping timeout tuning made "losing the race" worse.
 - **Open:** why Dot, Kip and Halloran never file tickets, and how many handlers like them we're not hearing from.
+
+Module 3 notes:
+- **Number for Helen: 51 → 6.** Pings to the quiet four in the week before 4.2
+  vs the last full week. Overall % taken is back to 75%, so the average hides it.
+- **Tickets vs pings agree:** every count or date a ticket quotes matches the
+  pings. Misses start on 12 Aug itself. Silence follows about 5 days later
+  (first "never goes off" ticket on 17 Aug).
+- **Meteor Mite vs The Gale** (both Kip's, Eastgate): Mite was asked first on
+  46% → 15% of their shared callouts, and went from about 12 pings a week to 1.
+  The Gale went to 15–20.
+- **Files:** `03-rewind/pings-used.csv` has all 1,696 pings (checked against
+  the database). `03-rewind/meteor-mite-and-the-gale-comic.svg` is the
+  story as a comic for presenting.
