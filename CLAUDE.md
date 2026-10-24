@@ -78,6 +78,14 @@ They're course material, not Rook evidence.
   was still 0.8–0.96. Captain Vantage, Nightwell and The Longcast were asked ahead
   of her. Old Town's volume held (about 11 → 10 a week). Not explained by the
   acceptance score. Likely the reweighting or proximity, which we can't see. Ask Wen.
+- **What-if replays** (Module 4; same pings, different rules). Quiet four on 6 Sep
+  vs the other twelve's median:
+  - Today's rules: 0 vs 0.94, about 18 min of travel time behind.
+  - If a miss didn't count as a no: 0.76–0.84 vs 0.98, about 3 min behind.
+  - If the score recovered (halfway back to 0.5 every 7 days): 0.23–0.35, about 10 min.
+  - Both: about 0.5, about 8 min.
+  So counting a miss as a no is the main cause. Recovery alone is too slow.
+  The replays understate the gains, since the four would have got more pings.
 - **"Seasonal" doesn't hold:** early August was normal (77.9%). The drop starts
   in the release week.
 - **The aggregate hides it:** it was back up to 72.7% by 31 Aug, partly because
@@ -148,3 +156,17 @@ Module 3 notes:
 - **Files:** `03-rewind/pings-used.csv` has all 1,696 pings (checked against
   the database). `03-rewind/meteor-mite-and-the-gale-comic.svg` is the
   story as a comic for presenting.
+
+Module 4 notes:
+- **Verdict** is in `04-x-ray-vision/verdict.md`. The only thing that puts points
+  back is a yes (`history.py:25`). There's no recovery, reset or override. The repo
+  code keeps scores only in memory, so production must differ. Ask Wen.
+- **Marcus's 14 Aug question, answered:** 4.2 applied to everyone the same. Past
+  turn-downs don't predict who went quiet (Vesper 19% not taken before 4.2 went
+  quiet; Halfmoon 28% stayed busy). Misses after 4.2 do.
+- **Experiment plan:**
+  - Step 1: a miss stops counting as a no. Roll out by area or by week, not by
+    splitting responders, since they compete for the same jobs.
+  - Step 2: test a 75s wait. Needs answer-time tracking, or a live test.
+- **Proposed mission metric:** share of callouts with a yes within X minutes.
+  Guardrail: nobody goes 5+ days without a ping.
