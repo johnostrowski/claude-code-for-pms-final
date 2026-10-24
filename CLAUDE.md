@@ -28,112 +28,98 @@ teaching scenario.
 ## Working context
 
 I'm the new PM for **Rook Dispatch**, taking over from Priya Raghunathan (left
-21 Aug 2026, no overlap). Sources: rook-wiki, rook-database,
-`00-rook/code/dispatch-routing`, and `00-rook/company/notes/handoff-from-priya.docx`.
+21 Aug 2026, no overlap). **I own the Dispatch roadmap.** Sources: rook-wiki
+(all pages read), rook-database, `00-rook/code/dispatch-routing`, Priya's
+handover note. The Module 04–06 files state course conclusions ahead of time.
+They're course material, not Rook evidence.
 
 ### Company and products
 - Software for independent masked **responders** and the **handlers** and
-  **quartermasters** who support them. 241 staff, mostly remote. Billed per active responder.
-  Monthly releases, 4.x.
-- **Hard rule:** never store or infer a responder's legal identity. Read
-  Security Policy 4.1 (not in the wiki) before touching responder records.
-- **Dispatch** (mine): ranks responders and pings them about callouts.
-  Console (handlers) and phone app (responders). Routing is where the risk is.
-- **Supply**: requisitions, maintenance, field failure reports. Reads the
-  Responder Availability Record that Dispatch publishes.
-
-### Vocabulary
-- **Callout** = an incident needing a responder. **Ping** = one callout offered to
-  one phone. Outcomes: **taken**, **turned down**, **missed** (no answer within
-  the **ping wait**, now 60s, the same for everyone).
-- **Acceptance rate** = share of pings taken (headline metric, reported weekly
-  in aggregate). **Time-to-accept** = median seconds to take.
-  **Coverage gap** = no responder with the needed capability tags.
-- **Routing priority**: rank by proximity (travel time), recent acceptance
-  score, capability match. **Mutual aid / shared cover**: not supported; Q4.
+  **quartermasters** who support them. Billed per active responder. Monthly 4.x releases.
+- **Hard rule:** never store or infer a responder's legal identity (Security Policy 4.1, not in the wiki).
+- **Dispatch** (mine): ranks responders and pings them. Console for handlers,
+  phone app for responders. **Supply**: requisitions, maintenance, failure
+  reports. It reads Dispatch's availability record.
+- **Vocabulary:** callout = an incident. Ping = one callout offered to one phone:
+  taken, turned down, or missed (no answer within the 60s **ping wait**).
+  **Acceptance rate** = share taken (weekly, aggregate). **Coverage gap** = no
+  responder had the needed tags. **Routing priority** ranks by proximity,
+  recent-acceptance score and capability match.
 
 ### People (wiki comments use roles)
 | Role | Name | Notes |
 | --- | --- | --- |
-| Director of Product | Helen Achebe | My director. Owns roadmap. |
-| Engineering manager | Marcus Oyelaran | Runs Dispatch eng. Start here. |
-| Staff engineer | Wen Li | Built routing. No written spec; talk to her. |
-| Product designer | Sofia Marino | Console, phone app, Sept interviews. |
-| Support lead | Nadia Hoffmann | Tickets. Hears handler pain first. |
-| Data analyst | Ravi Menon | Weekly acceptance report (not in wiki). |
+| Director of Product | Helen Achebe | My director |
+| Engineering manager | Marcus Oyelaran | Runs Dispatch eng. Start here |
+| Staff engineer | Wen Li | Built routing. No written spec |
+| Product designer | Sofia Marino | Console, phone app, Sept interviews |
+| Support lead | Nadia Hoffmann | Tickets |
+| Data analyst | Ravi Menon | Weekly acceptance report (not in wiki) |
 
-### Releases
-- **4.0** (7 Apr): console navigation, profile redesign, routing override audit log.
-- **4.1** (16 Jun): travel-time proximity, bulk callout, push reliability.
-- **4.2** (12 Aug): proximity weight 0.45→0.60, recent-acceptance weight
-  0.40→0.25, ping wait 90s→60s, filter persistence, three defect fixes.
+### 4.2 (12 Aug): proximity weight 0.45→0.60, acceptance weight 0.40→0.25, ping wait 90s→60s, filter persistence
+- **Pings taken 76.6% → 64.0%; missed 2.3% → 18.0%;** callouts nobody took
+  5.5% → 11.1%. Tickets went from 5–8 to 20–32 a week.
+- **Four responders went almost silent:** Vesper, Farlight, Meteor Mite and The
+  Undertow. Each went from 11–14 pings a week to about 1. They missed a third of
+  their pings in the release week. Halfmoon and Corporal Ashgrove are sliding more slowly (11 → 8).
+- **Likely mechanism (my reading of the code; Wen to confirm):**
+  - A miss costs the same as a turn-down (−0.12), while a yes earns +0.08, so
+    anyone under 60% taken slides to zero.
+  - Nothing lets the score recover (Wen's 2019 TODO).
+  - So the 60s wait caused misses, scores sank, and the bottom of the list is rarely asked.
+- **"Seasonal" doesn't hold:** early August was normal (77.9%). The drop starts
+  in the release week.
+- **The aggregate hides it:** it was back up to 72.7% by 31 Aug, partly because
+  the quiet four were barely pinged any more.
+- **Interviews match:** Dot sees pings vanish and quiet weeks. Kip says Mite is
+  quiet while The Gale is overworked. Ambrose: slow answers no longer land the job.
 
-### 4.2 findings (rook-database, 29 Jun–6 Sep; interviews 2–5 Sep)
-- **Pings taken: 76.6% → 64.0%. Missed: 2.3% → 18.0%.** Callouts nobody took:
-  5.5% → 11.1%. Tickets: 5–8 a week → 20–32 a week.
-- **Four responders went almost silent:** Vesper, Farlight, Meteor Mite, The
-  Undertow. Each went from 11–14 pings a week to about 1 by the week of 31 Aug.
-  They missed about a third of their pings in the release week. Before 4.2,
-  nothing in the data marked them out.
-- **Likely mechanism (my reading of the code; Wen should confirm):**
-  - Missed counts the same as turned down. Both cost 0.12 and a yes earns 0.08,
-    so anyone taking under 60% of pings slides toward zero.
-  - Nothing lets the score recover over time (Wen's 2019 TODO in `history.py`).
-  - So the 60s wait caused misses, the misses sank their scores, and responders
-    at the bottom of the list are rarely asked, so they can't earn their way back.
-- **The interviews match:** Dot (Vesper) sees both pings vanishing and quiet
-  weeks. Kip says Meteor Mite is quiet while The Gale, same area, is busier
-  (about 11 → 4 pings a week vs 13 → 19). Ambrose: slower answers no longer
-  land the job.
-- **"Seasonal" doesn't hold:** the first week of August was normal (77.9%
-  taken). The drop starts in the release week. There's no earlier year of data.
-- **The aggregate hides it:** it recovered to 72.7% by 31 Aug, partly because
-  the four quiet responders were barely pinged any more.
+### Interviews (4) vs. tickets (147)
+- **Different people:** Vesper, Meteor Mite, The Gale and Sgt. Bulwark have
+  zero tickets. Only Ambrose is in both piles.
+- **Interviews only:** handlers want an alert when a callout comes in (3 of 4
+  interviews vs 2 tickets), and lopsided workload.
+- **Tickets only:** "is my account broken?" (30), filter problems beyond
+  resets, console bugs and records issues (36), Supply logistics, billing.
+- Halloran says maintenance scheduling has "gotten smarter." 4 tickets disagree.
+- Tickets are often near-identical templates, so the counts overstate how many distinct problems there are.
 
-### Key contradictions and gaps
-- **Missed vs. turned down:** recorded separately in the Glossary and the database,
-  but scored the same in the code. Marcus asked on 14 Aug if that was intended.
-  Wen never answered.
-- **Release notes vs. the code:** the notes say "proximity weighted up." They
-  leave out that the acceptance weight was cut.
-- **The code README** says "everyone available is on the list." True, but the
-  bottom of the list is rarely asked.
-- **Tickets vs. interviews:** Vesper and Meteor Mite have zero tickets since 4.2.
-  Their handlers raised it only in interviews. Neither source shows all four.
-- **Priya** calls filter persistence cosmetic noise. Ambrose and several tickets
-  report filters resetting or saving the wrong view.
-- **Priya** says Marcus pulls numbers. The directory says Ravi owns them.
-- **Ping timeout tuning** (roadmap: "tune") shipped as a flat cut from 90s to 60s.
-  No experiment or test is recorded anywhere (wiki, code, handover).
-  **Availability Confidence**, committed for 4.2, is in no release, changelog or code.
-- **Requisition chains brief** cites Halloran wanting a second approval. In his
-  interview, his complaint is slowness (the priority field does nothing). The
-  brief's scope also grows mid-document.
-- **Stale briefs:** Bulk Callout says unstaffed but shipped in 4.1. Audit Log
-  shipped in 4.0.
-- **Missing:** answer time (so no time-to-accept), capability tags (so no coverage
-  gap), score history, override records, Ravi's reports, Security Policy 4.1.
-  An unexplained drop in callouts in the release week (about 138 → 110).
-- **Roadmap** last reviewed 30 Jun. The wiki still names Priya on all six items.
-  **I own the Dispatch roadmap now.**
+### Contradictions and gaps
+- Missed and turned down are recorded separately but scored the same. Marcus
+  asked on 14 Aug whether that was intended. No answer.
+- The release notes omit the cut to the acceptance weight. The code README says
+  "everyone available is on the list," but the bottom of the list is rarely asked.
+- Ping timeout "tuning" shipped as a flat cut with no recorded experiment.
+  Availability Confidence (committed for 4.2) never shipped.
+- Priya calls filter tickets noise, but they report real resets and wrong views.
+  Priya says Marcus pulls numbers, but the directory says Ravi owns them.
+- The requisition-chains brief adds an approval step, but Halloran's complaint is
+  slowness. Bulk Callout and Audit Log briefs are stale (both shipped).
+- **Missing data:** answer time (so no time-to-accept), capability tags (so no
+  coverage gap), score history, overrides. Also missing: Ravi's reports. The
+  roadmap was last reviewed 30 Jun and still lists Priya on every item.
+- Unexplained: why the four missed more, and the drop in callouts in the release week (138 → 110).
 
-### Open actions (mine)
-- **Routing:** confirm the mechanism with Wen, then decide between a rollback and
-  an experiment that tests different scoring logic (e.g. missed ≠ turned down,
-  score recovery, ping wait).
-- **Filters:** run an experiment on filter persistence. Resets and wrong views hurt trust.
-- **Tracking epic:** capture answer time, capability tags, score history and
-  overrides. Enough to measure acceptance, time-to-accept and coverage gap per
-  responder, without over-building.
-- **Chase Ravi** for the weekly reports and per-responder numbers.
-- **Roadmap:** re-own all items, and agree with Helen which deferred 4.2 items stay in Q3.
-- **Delegated to Wen:** write down how Dispatch decides who gets pinged (no doc
-  exists). She does it alongside confirming the mechanism with me.
+### My priorities
+1. **Priority:** the two ping problems, "gone before I could answer" (16
+   tickets) and "nothing again this week" (30 tickets). Confirm the mechanism
+   with Wen, then choose between a rollback and an experiment on the scoring
+   (miss ≠ turn-down, score recovery, ping wait).
+2. **Quick fixes:** the feed jumping to the top (2), signed out too often (2), a
+   warning when filters reset (4). Shared and cross-computer filter problems are bigger.
+3. **End-of-season "one more thing":** dark mode (4 tickets + Kip).
 
-Module 1 notes: every wiki page has now been read. The person pages hold nothing
-beyond the Team directory. The richest evidence was the `pings` table, week by
-week per responder, plus `config.py`, `history.py` and `offer.py`. Watch Halfmoon
-and Corporal Ashgrove: their pings are sliding more slowly (about 11 → 8 a week).
-Still open: why those four missed more in the release week (the interviews hint
-at distance from the phone). The Module 04–06 files in the repo state course
-conclusions ahead of time. Treat them as course material, not Rook evidence.
+### Open actions
+- **Delegated to Wen:** write down how Dispatch decides who gets pinged.
+- **Tracking epic:** capture answer time, tags, score history and overrides.
+  Enough for per-responder acceptance, time-to-accept and coverage gap. No more.
+- Chase Ravi. Re-own the roadmap, and agree with Helen which deferred 4.2 items stay in Q3.
+
+Module 2 notes:
+- **Interviews:** losing the race (3 of 4) and wanting a handler alert (3 of 4)
+  were the top complaints, then quiet weeks (2) and small text (2).
+- **Ticket groups:** quiet 30, Supply 26, console layout 25, gone-before-answer 16,
+  filters 16, records 11, readability 8, notifications 7, sign-in 6, billing 2.
+- **Roadmap fit:** only 3 of the 8 interview complaint groups touch the roadmap.
+  Only the handler phone app helps. Ping timeout tuning made "losing the race" worse.
+- **Open:** why Dot, Kip and Halloran never file tickets, and how many handlers like them we're not hearing from.

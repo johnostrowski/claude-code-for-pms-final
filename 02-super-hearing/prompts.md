@@ -16,6 +16,14 @@ prompt library built from your own questions.
 
 ### 1.
 
+how many of these requests are somehow represented in the roadmap?
+
 ### 2.
+
+Prioritize "phone buzzed, by the time i unlocked it, gone."  "nothing again this week. starting to wonder if im still even in the system." 
+
+Quick fix for "the feed jumps back to the top and I lose my place."  "Twice now my saved filters have been wiped overnight." "I have to sign in again at the worst moment."
+
+Dark mode is good to have, end of season "one more thing"
 
 ### 3.
