@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dispatch Prototype: Meteor Mite</title>
+<style>
+  :root {
+    --bg: #f3f3ef;
+    --panel: #ffffff;
+    --ink: #1b1d21;
+    --muted: #5f6670;
+    --line: #dcdcd5;
+    --soft: #f7f7f4;
+    --accent: #2a59d6;
+    --accent-soft: #e7edfb;
+    --good: #137a4b;
+    --good-soft: #e4f4eb;
+    --warn: #a74b06;
+    --warn-soft: #fdf0e2;
+    --bad: #b42318;
+    --bad-soft: #fcebe9;
+    --mite: #eb6834;
+    --gale: #2a78d6;
+    --console-bar: #1f2430;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+  }
+  button { font: inherit; cursor: pointer; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 48px; }
+
+  /* Header and controls */
+  header { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between; margin-bottom: 14px; }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-size: 24px; margin: 2px 0 0; letter-spacing: -.01em; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 3px; }
+  .seg button { border: 0; background: transparent; padding: 8px 14px; border-radius: 8px; color: var(--muted); }
+  .seg button.on { background: var(--ink); color: #fff; }
+  .seg-label { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .switches { display: flex; flex-wrap: wrap; gap: 14px; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 16px; }
+  .btn { border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 9px 14px; border-radius: 9px; }
+  .btn:hover:not(:disabled) { border-color: #b9b9b0; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .controls .clock { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--muted); }
+
+  .guide { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; font-size: 14px; }
+  .guide ol { margin: 6px 0 0; padding-left: 20px; }
+  .guide li { margin: 2px 0; }
+
+  /* Stage */
+  .stage { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
+  @media (max-width: 880px) { .stage { grid-template-columns: 1fr; } }
+
+  .surface-label { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px 2px; }
+
+  /* Kip's console */
+  .console { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .console-bar { background: var(--console-bar); color: #e9ebf0; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; font-size: 13px; }
+  .console-bar b { color: #fff; }
+  .console-body { padding: 14px; }
+  .console-note { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .cards { grid-template-columns: 1fr; } }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px 14px; position: relative; background: var(--panel); }
+  .card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 10px 0 0 10px; }
+  .card.mite::before { background: var(--mite); }
+  .card.gale::before { background: var(--gale); }
+  .card h3 { margin: 0; font-size: 17px; }
+  .card .area { font-size: 13px; color: var(--muted); }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
+  .pill { font-size: 12px; padding: 3px 9px; border-radius: 999px; white-space: nowrap; background: var(--good-soft); color: var(--good); }
+  .pill.ping { background: var(--accent-soft); color: var(--accent); }
+  .pill.away { background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
+  .pill.paused { background: var(--warn-soft); color: var(--warn); }
+  .stat { display: flex; justify-content: space-between; font-size: 14px; padding: 5px 0; border-top: 1px dashed var(--line); }
+  .stat span:first-child { color: var(--muted); }
+  .stat b { font-variant-numeric: tabular-nums; }
+  .usual { color: var(--muted); font-weight: 400; }
+  .why { margin-top: 10px; font-size: 13px; padding: 8px 10px; border-radius: 8px; background: var(--soft); color: var(--ink); }
+  .why.good { background: var(--good-soft); }
+  .why.warn { background: var(--warn-soft); }
+  .why.accent { background: var(--accent-soft); }
+  .flag { margin-top: 10px; font-size: 13px; padding: 8px 10px; border-radius: 8px; background: var(--bad-soft); color: var(--bad); border: 1px solid #f3c2bc; }
+  .flag b { display: block; }
+
+  .badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 600; vertical-align: 1px; margin-right: 4px; }
+
+  /* Phone */
+  .phone { width: 300px; max-width: 100%; height: 600px; margin: 0 auto; border: 11px solid #15171b; border-radius: 42px; background: #fbfbfa; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,.12); }
+  .notch { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 92px; height: 24px; background: #15171b; border-radius: 14px; z-index: 2; }
+  .screen { position: absolute; inset: 0; padding: 46px 18px 22px; display: flex; flex-direction: column; }
+  .app-head { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+  .app-head b { color: var(--ink); font-size: 15px; }
+  .idle-mid { margin: auto 0; text-align: center; color: var(--muted); }
+  .idle-mid .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--good); display: inline-block; margin-bottom: 8px; box-shadow: 0 0 0 6px var(--good-soft); }
+  .idle-mid h4 { margin: 4px 0; color: var(--ink); font-size: 18px; }
+  .idle-foot { font-size: 13px; color: var(--muted); text-align: center; }
+
+  .ping-card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 16px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+  .ping-kicker { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .ping-card h4 { margin: 6px 0 2px; font-size: 18px; line-height: 1.25; }
+  .ping-meta { font-size: 13px; color: var(--muted); }
+  .count { display: flex; justify-content: space-between; align-items: baseline; margin: 14px 0 6px; }
+  .count .left { font-size: 30px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .count .phase { font-size: 12px; color: var(--muted); text-align: right; max-width: 140px; }
+  .bar { position: relative; height: 8px; background: #ececE6; border-radius: 4px; overflow: hidden; }
+  .bar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 4px; }
+  .bar { overflow: visible; }
+  .bar .mark { position: absolute; top: -4px; bottom: -4px; left: 33.333%; width: 2px; background: var(--good); }
+  .bar-legend { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .answer { display: grid; gap: 8px; margin-top: 16px; }
+  .answer button { border: 0; border-radius: 12px; padding: 13px; font-weight: 600; }
+  .take { background: var(--good); color: #fff; }
+  .decline { background: #ececE6; color: var(--ink); }
+  .hint { font-size: 12.5px; color: var(--good); margin-top: 10px; text-align: center; }
+  .runout { margin-top: auto; text-align: center; font-size: 12px; }
+  .runout button { border: 1px dashed #b9b9b0; background: transparent; color: var(--muted); border-radius: 8px; padding: 6px 10px; }
+
+  .toast { margin: auto 0; text-align: center; padding: 18px; border-radius: 16px; background: var(--soft); font-size: 15px; }
+  .toast.good { background: var(--good-soft); color: var(--good); }
+
+  .checkin { margin: auto 0; background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 18px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+  .checkin h4 { margin: 0 0 6px; font-size: 19px; }
+  .checkin p { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+
+  .phone-caption { text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  /* Behind the scenes */
+  .backstage { margin-top: 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .backstage h2 { font-size: 16px; margin: 0 0 2px; }
+  .backstage .sub { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+  .rules { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .rule { font-size: 12.5px; padding: 4px 9px; border-radius: 999px; background: var(--soft); border: 1px solid var(--line); }
+  .rule.changed { background: var(--accent-soft); border-color: #c7d4f6; color: var(--accent); }
+  .scores { display: grid; gap: 8px; margin-bottom: 14px; }
+  .score-row { display: grid; grid-template-columns: 110px minmax(0, 1fr) 44px; gap: 10px; align-items: center; font-size: 14px; }
+  .track { position: relative; height: 12px; background: #ececE6; border-radius: 6px; }
+  .track .val { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; transition: width .4s ease; }
+  .track .neutral { position: absolute; left: 50%; top: -4px; bottom: -4px; width: 2px; background: #9a9a90; }
+  .score-row b { font-variant-numeric: tabular-nums; text-align: right; }
+  .neutral-note { font-size: 12px; color: var(--muted); margin: -6px 0 12px 120px; }
+  .chart-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; font-size: 14px; margin: 4px 0 6px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--muted); }
+  .sw { display: inline-block; width: 16px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+  .sw.dash { background: repeating-linear-gradient(90deg, #9a9a90 0 4px, transparent 4px 7px); }
+  .chart-wrap { position: relative; margin-bottom: 10px; }
+  .chart-wrap svg { display: block; width: 100%; height: auto; }
+  .tip { position: absolute; top: 6px; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font-size: 12.5px; line-height: 1.4; box-shadow: 0 4px 14px rgba(0,0,0,.1); width: 250px; }
+  .tip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+  .table-view { font-size: 13px; margin-bottom: 12px; }
+  .table-view summary { cursor: pointer; color: var(--muted); }
+  .table-view table { border-collapse: collapse; width: 100%; margin-top: 6px; }
+  .table-view th, .table-view td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+  .table-view .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .spark { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); }
+  .spark-head { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .spark-head b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .spark svg { display: block; width: 100%; height: 34px; }
+  .log { list-style: none; margin: 0; padding: 0; max-height: 300px; overflow: auto; border-top: 1px solid var(--line); }
+  .log li { display: grid; grid-template-columns: 82px minmax(0, 1fr); gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+  .log time { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .log li.good span { color: var(--good); }
+  .log li.warn span { color: var(--warn); }
+  .log li.bad span { color: var(--bad); }
+  .log li.accent span { color: var(--accent); }
+  .log li.day { background: var(--soft); }
+
+  footer { margin-top: 18px; font-size: 12.5px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="eyebrow">Rook Dispatch · clickable prototype · from brief.md</div>
+      <h1>Getting quiet responders back on the list</h1>
+    </div>
+    <div class="switches">
+      <div>
+        <div class="seg-label">Start</div>
+        <div class="seg" role="group" aria-label="Starting point">
+          <button data-action="scenario" data-scenario="before">Before Mite went quiet</button>
+          <button data-action="scenario" data-scenario="launch">Launch day</button>
+        </div>
+      </div>
+      <div>
+        <div class="seg-label">Rules</div>
+        <div class="seg" role="group" aria-label="Rules">
+          <button data-action="mode" data-mode="today">Today (4.2)</button>
+          <button data-action="mode" data-mode="fix">With the fix</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="guide" id="guide"></div>
+
+  <div class="controls">
+    <button class="btn primary" data-action="callout" id="btn-callout">New callout in Eastgate</button>
+    <button class="btn" data-action="skip" id="btn-skip">Skip to next day</button>
+    <button class="btn" data-action="restart">Restart</button>
+    <span class="clock" id="clock"></span>
+  </div>
+
+  <div class="stage">
+    <section>
+      <div class="surface-label">Kip's console</div>
+      <div class="console">
+        <div class="console-bar"><span><b>Rook Dispatch</b> · Console</span><span>Kip · 2 responders</span></div>
+        <div class="console-body">
+          <p class="console-note" id="console-note"></p>
+          <div class="cards" id="cards"></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="surface-label" style="text-align:center">Meteor Mite's phone</div>
+      <div class="phone" aria-live="polite">
+        <div class="notch"></div>
+        <div class="screen" id="screen"></div>
+      </div>
+      <div class="phone-caption">The demo clock runs 4× faster: 60 seconds take 15.</div>
+    </section>
+  </div>
+
+  <section class="backstage">
+    <h2>Behind the scenes</h2>
+    <p class="sub">What Dispatch is doing with each answer. Nobody sees this today. It's here so you can watch the rules work.</p>
+    <div class="rules" id="rules"></div>
+    <div class="scores" id="scores"></div>
+    <div class="neutral-note">The line marks neutral (0.50), where everyone starts. A higher score means asked sooner.</div>
+    <div class="chart-head">
+      <b>Score history</b>
+      <span class="legend">
+        <span><span class="sw" style="background:var(--mite)"></span>Meteor Mite</span>
+        <span><span class="sw" style="background:var(--gale)"></span>The Gale</span>
+        <span><span class="sw dash"></span>Neutral (0.50)</span>
+      </span>
+    </div>
+    <div class="chart-wrap" id="chart-wrap"><div id="chart"></div><div class="tip" id="tip" hidden></div></div>
+    <details class="table-view"><summary>Show score history as a table</summary><div id="hist-table"></div></details>
+    <ul class="log" id="log"></ul>
+  </section>
+
+  <footer>
+    Prototype only. Scoring follows the 4.2 routing code (travel time × 0.60 + recent acceptance × 0.25 + capability × 0.15; a yes +0.08, a no −0.12) and the changes in brief.md. Callouts and travel times are made up. A responder who takes a callout is out for 40 minutes, and callouts you send come 25 minutes apart. The next-nearest responder outside Eastgate stands in for the other twelve, at their median score (0.94). "Usual: 12" is each responder's average weekly pings in the six weeks before 4.2. Skipped days replay Mite answering the way Mite did in the release week: two pings taken, then one missed. Launch-day scores come from the Module 3 replay on 6 Sep: the quiet four at 0, the other twelve's median at 0.94.
+  </footer>
+</div>
+
+<script>
+  const R = { WAIT: 60, QUICK: 40, CREDIT: 0.08, PENALTY: 0.12, BOOST: 0.02, NEUTRAL: 0.5,
+              W_PROX: 0.60, W_ACC: 0.25, W_CAP: 0.15, HORIZON: 45 };
+  const SPEED = 4;
+  const USUAL = 12;
+  const JOB_MINUTES = 40;   // a responder who takes a callout is out of the line this long
+  const LIVE_GAP = 25;      // minutes between callouts you send by hand
+  const OUT_SCORE = 0.94;   // next-nearest responder outside Eastgate: the other twelve's median
+  const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  // Travel times in minutes for Mite, The Gale and the next-nearest responder outside Eastgate.
+  const CALLOUTS = [
+    { what: 'Warehouse fire, Dock Road', mite: 7, gale: 8, out: 17 },
+    { what: 'Car hanging off the Eastgate overpass', mite: 9, gale: 9, out: 14 },
+    { what: 'Gas leak, Tannery Lane', mite: 6, gale: 8, out: 16 },
+    { what: 'Rooftop standoff, Mill Street', mite: 12, gale: 10, out: 15, galeNo: true },
+    { what: 'Flooded underpass, Canal Row', mite: 5, gale: 7, out: 18 },
+    { what: 'Crowd crush outside the Arena', mite: 8, gale: 8, out: 12 }
+  ];
+  const SKIP_TIMES = [10 * 60 + 10, 10 * 60 + 40, 14 * 60];
+  const EVENING = 18 * 60;
+  const NAME = { mite: 'Mite', gale: 'The Gale', out: 'next-nearest outside Eastgate' };
+
+  let S, timer = null, toastId = 0;
+
+  const clamp = v => Math.max(0, Math.min(1, v));
+  const f2 = v => v.toFixed(2);
+  const hhmm = m => String(Math.floor(m / 60) % 24).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+  const now = () => hhmm(S.minutes);
+  const stamp = () => DAYS[S.day] + ' ' + now();
+  const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+  const total = (score, mins) => R.W_PROX * Math.max(0, 1 - mins / R.HORIZON) + R.W_ACC * score + R.W_CAP;
+  const fix = () => S.mode === 'fix';
+  const clock = () => S.day * 1440 + S.minutes;
+  const free = k => clock() >= (S.busy[k] || 0);
+  const badge = n => fix() ? `<span class="badge" title="Brief item ${n}">${n}</span>` : '';
+
+  const GUIDES = {
+    before: `<b>Try this.</b> Kip runs two responders in Eastgate, Meteor Mite and The Gale. Both usually get about 12 pings a week.
+      <ol>
+        <li>Press <b>New callout in Eastgate</b>. Mite is first in line, so Mite's phone buzzes.</li>
+        <li>Don't answer. Let it run out, the way Mite's pings did after 4.2 cut the wait to 60 seconds. Then send a few more callouts.</li>
+        <li>Switch to <b>With the fix</b> and do the same. Watch Mite's phone, Kip's cards and the scores below.</li>
+        <li>With the fix, also try <b>Can't make it</b> inside the first 40 seconds, then after it. Or leave the check-in unanswered and skip ahead five days.</li>
+      </ol>`,
+    launch: `<b>Launch day.</b> The fix ships, but Mite is already where today's rules left Mite: a score of 0.00 and about one ping a week. The Gale is at 0.94.
+      <ol>
+        <li>Press <b>New callout in Eastgate</b> a few times. The Gale takes what it can. While The Gale is out on a job, the callout goes to someone from another area, not Mite. At 0.00, Mite has to be about 18 minutes closer to win. Mite's phone stays silent.</li>
+        <li>Skip ahead to Thursday. With the fix, Kip's card warns that Mite hasn't been pinged in 5 days, and Mite's phone asks "It's been quiet. Still available?" Today's rules do neither, and Mite stays at 0.00 for good.</li>
+        <li>Tap <b>Yes, I'm here</b>. Mite's score resets to neutral (0.50). Now Mite only needs to be about 8 minutes closer.</li>
+        <li>Send more callouts and take them. Mite wins the nearby ones while The Gale is busy, and each yes adds 0.08. Watch Mite's line climb in the score history below and on Kip's card.</li>
+      </ol>`
+  };
+
+  function fresh(mode, scenario) {
+    const launch = scenario === 'launch';
+    return {
+      mode, scenario, day: 0, minutes: EVENING, n: 0, num: 1421, autoIdx: 0, busy: {},
+      mite: launch ? { score: 0.00, pings: 0, lastPing: { day: -2, t: '19:30' } }
+                   : { score: 0.96, pings: 1, lastPing: { day: 0, t: '11:15' } },
+      gale: { score: launch ? 0.94 : 0.80, pings: 2, lastPing: { day: 0, t: '14:05' } },
+      phone: 'idle', ping: null, toast: null,
+      missRun: 0, missesTonight: 0, lateNos: 0, galeCovered: 0, unfilled: 0,
+      checkin: false, away: false, note: null, log: [], history: []
+    };
+  }
+
+  function log(text, tone) { S.log.unshift({ at: stamp(), text, tone: tone || '' }); }
+
+  function change(who, old, nw) {
+    const d = Math.round((nw - old) * 100) / 100;
+    if (d === 0) return `${who} stays at ${f2(old)}.`;
+    return `${who} ${f2(old)} → ${f2(nw)} (${d > 0 ? '+' : '−'}${Math.abs(d).toFixed(2)}).`;
+  }
+
+  function nextCallout() {
+    const c = Object.assign({}, CALLOUTS[S.n % CALLOUTS.length], { num: S.num++, trail: [] });
+    S.n++;
+    return c;
+  }
+
+  // Who gets asked, in order. Anyone out on a callout isn't available. Mite also sits out
+  // while away or waiting on the check-in. The next-nearest responder from another area
+  // is always in the running.
+  function lineFor(c) {
+    const list = [{ k: 'out', t: total(OUT_SCORE, c.out) }];
+    if (free('gale')) list.push({ k: 'gale', t: total(S.gale.score, c.gale) });
+    if (!S.away && !S.checkin && free('mite')) list.push({ k: 'mite', t: total(S.mite.score, c.mite) });
+    list.sort((a, b) => b.t - a.t);
+    return list;
+  }
+
+  function stopTimer() { clearInterval(timer); timer = null; }
+
+  function showToast(text, tone) {
+    S.phone = 'toast';
+    S.toast = { text, tone };
+    const id = ++toastId;
+    setTimeout(() => {
+      if (id === toastId && S.phone === 'toast') {
+        S.phone = S.away ? 'away' : S.checkin ? 'checkin' : 'idle';
+        render();
+      }
+    }, 2400);
+  }
+
+  // A miss: today it costs the same as a no; with the fix it costs nothing.
+  function applyMiss() {
+    const old = S.mite.score;
+    const nw = fix() ? old : clamp(old - R.PENALTY);
+    S.mite.score = nw;
+    S.missRun++;
+    S.missesTonight++;
+    return { old, nw };
+  }
+
+  function maybeCheckin() {
+    if (fix() && S.missRun >= 3 && !S.checkin) {
+      S.checkin = true;
+      S.checkinWhy = 'missed';
+      S.phone = 'checkin';
+      S.note = { kind: 'checkin', at: stamp() };
+      log(`3 missed in a row. Mite's phone asks "Still available tonight?" Mite sits out until Mite answers, so no callout waits on an unanswered phone.`, 'accent');
+      return true;
+    }
+    return false;
+  }
+
+  // The 5-day warning on Kip's card also asks Mite, once per quiet spell.
+  function maybeQuietCheckin() {
+    const p = S.mite.lastPing, key = p.day + ' ' + p.t;
+    if (!fix() || S.checkin || S.away || S.day - p.day < 5 || S.quietAskedFor === key) return;
+    S.checkin = true;
+    S.checkinWhy = 'quiet';
+    S.quietAskedFor = key;
+    S.phone = 'checkin';
+    S.note = { kind: 'checkin', at: stamp() };
+    log(`5 days without a ping. Kip's card shows the warning, and Mite's phone asks "Still available?"`, 'accent');
+  }
+
+  // One point on the score history: both scores after something changed them.
+  function snap(label) {
+    S.history.push({ at: stamp(), day: S.day, mite: S.mite.score, gale: S.gale.score, label });
+  }
+
+  // Close a callout: note how it ended and record the scores it left behind.
+  function settle(c, ending) {
+    c.trail.push(ending);
+    snap(`#${c.num}: ${c.trail.join(', ')}`);
+  }
+
+  // Offer the callout down the line. Live mode stops at Mite's phone and waits for a tap.
+  function offer(c, line, tally) {
+    if (!line.length) {
+      S.unfilled++;
+      if (tally) tally.nobody++;
+      else log(`Nobody took #${c.num}. Kip has to find cover another way.`, 'bad');
+      settle(c, 'nobody took it');
+      return;
+    }
+    const who = line[0].k, rest = line.slice(1);
+    if (who === 'out') {
+      if (tally) tally.out++;
+      else log(`The next-nearest responder from outside Eastgate (${c.out} min away) took #${c.num}.`);
+      settle(c, 'someone from outside Eastgate took it');
+      return;
+    }
+    if (who === 'gale') {
+      const g = S.gale, old = g.score;
+      g.pings++; g.lastPing = { day: S.day, t: now() };
+      if (tally) tally.g++;
+      if (c.galeNo && S.scenario !== 'launch') {
+        g.score = clamp(old - R.PENALTY);
+        if (!tally) log(`The Gale turned down #${c.num}. ${change('The Gale', old, g.score)}`);
+        c.trail.push('The Gale said no');
+        return offer(c, rest, tally);
+      }
+      g.score = clamp(old + R.CREDIT);
+      S.busy.gale = clock() + JOB_MINUTES;
+      if (c.miteAsked) S.galeCovered++;
+      if (!tally) log(`The Gale took #${c.num}. ${change('The Gale', old, g.score)}`);
+      settle(c, 'The Gale took it');
+      return;
+    }
+    const m = S.mite;
+    m.pings++; m.lastPing = { day: S.day, t: now() };
+    c.miteAsked = true;
+    if (tally) {
+      tally.m++;
+      if (S.autoIdx++ % 3 === 2) {
+        tally.miss++;
+        applyMiss();
+        c.trail.push('Mite missed');
+        if (maybeCheckin()) return offer(c, rest.filter(x => x.k !== 'mite'), tally);
+        return offer(c, rest, tally);
+      }
+      tally.take++;
+      m.score = clamp(m.score + R.CREDIT);
+      S.busy.mite = clock() + JOB_MINUTES;
+      S.missRun = 0;
+      settle(c, 'Mite took it');
+      return;
+    }
+    S.ping = { c, rest, start: performance.now(), elapsed: 0 };
+    S.phone = 'ping';
+    timer = setInterval(tick, 100);
+  }
+
+  function newCallout() {
+    if (S.ping) return;
+    S.minutes += LIVE_GAP;
+    const c = nextCallout();
+    const line = lineFor(c);
+    const order = line.map((x, i) => `${i + 1}. ${NAME[x.k]} (${x.t.toFixed(3)})`).join('  ');
+    const busy = (free('gale') ? '' : ' The Gale is out on a callout.') + (free('mite') ? '' : ' Mite is out on a callout.');
+    const out = S.away ? ' Mite is away tonight.' : S.checkin ? ' Mite is sitting out until the check-in is answered.' : '';
+    const miteIn = line.some(x => x.k === 'mite');
+    const quiet = miteIn && line[0].k !== 'mite' ? ' Mite\'s phone stays silent.' : '';
+    log(`#${c.num} ${c.what}.${busy}${out} Who's asked first (travel time + score): ${order}.${quiet}`, quiet ? 'warn' : '');
+    offer(c, line, null);
+    render();
+  }
+
+  function tick() {
+    if (!S.ping) return;
+    S.ping.elapsed = (performance.now() - S.ping.start) / 1000 * SPEED;
+    if (S.ping.elapsed >= R.WAIT) { miss(); return; }
+    updateCountdown();
+  }
+
+  function take() {
+    const p = S.ping; if (!p) return;
+    stopTimer(); S.ping = null;
+    const old = S.mite.score;
+    S.mite.score = clamp(old + R.CREDIT);
+    S.busy.mite = clock() + JOB_MINUTES;
+    S.missRun = 0;
+    S.note = { kind: 'taken', at: stamp() };
+    log(`Mite took #${p.c.num} after ${Math.max(1, Math.round(p.elapsed))}s. ${change('Mite', old, S.mite.score)}`, 'good');
+    settle(p.c, 'Mite took it');
+    showToast("It's yours. Kip can see you're on it.", 'good');
+    render();
+  }
+
+  function decline() {
+    const p = S.ping; if (!p) return;
+    stopTimer(); S.ping = null;
+    const secs = Math.max(1, Math.round(p.elapsed));
+    const old = S.mite.score;
+    let nw, text, tone, toast;
+    if (fix() && p.elapsed <= R.QUICK) {
+      nw = old < R.NEUTRAL ? Math.min(R.NEUTRAL, old + R.BOOST) : old;
+      text = `Mite said a quick no to #${p.c.num} (${secs}s), so the callout moved on ${R.WAIT - secs}s sooner. ${change('Mite', old, nw)}${nw === old ? ' A quick no only lifts a score up to neutral (0.50).' : ''}`;
+      tone = 'good';
+      toast = 'Thanks for saying so quickly. Passed on to the next responder.';
+      S.note = { kind: 'quick', at: stamp() };
+    } else {
+      nw = clamp(old - R.PENALTY);
+      text = fix()
+        ? `Mite said no to #${p.c.num} after ${secs}s, past the 40s window. ${change('Mite', old, nw)}`
+        : `Mite turned down #${p.c.num} after ${secs}s. ${change('Mite', old, nw)}`;
+      tone = 'warn';
+      toast = 'Passed on to the next responder.';
+      if (fix()) { S.lateNos++; S.note = { kind: 'late', at: stamp() }; }
+    }
+    S.mite.score = nw;
+    S.missRun = 0;
+    log(text, tone);
+    p.c.trail.push(tone === 'good' ? 'Mite said a quick no' : 'Mite said no');
+    offer(p.c, p.rest, null);
+    showToast(toast, '');
+    render();
+  }
+
+  function miss() {
+    const p = S.ping; if (!p) return;
+    stopTimer(); S.ping = null;
+    const { old, nw } = applyMiss();
+    log(`Mite missed #${p.c.num}: nobody answered in 60s. ${fix() ? 'Recorded as missed, not counted as a no.' : 'Counted the same as a no.'} ${change('Mite', old, nw)}`, fix() ? '' : 'bad');
+    p.c.trail.push('Mite missed');
+    offer(p.c, p.rest, null);
+    if (!maybeCheckin()) {
+      if (fix()) S.note = { kind: 'missed', at: stamp() };
+      showToast('Missed. That callout went to the next responder.', '');
+    }
+    render();
+  }
+
+  function checkinYes() {
+    const old = S.mite.score, nw = Math.max(old, R.NEUTRAL);
+    S.mite.score = nw;
+    S.checkin = false; S.missRun = 0;
+    S.note = { kind: 'back', at: stamp() };
+    log(`Mite tapped "Yes, I'm here" and is back in line. ${old < R.NEUTRAL ? change('Mite', old, nw) + ' Reset to neutral.' : `Score is already above neutral (${f2(old)}), so it stays.`}`, 'good');
+    snap(`Mite: "Yes, I'm here"`);
+    showToast("You're back in line.", 'good');
+    render();
+  }
+
+  function checkinNo() {
+    S.away = true; S.checkin = false; S.missRun = 0;
+    S.note = { kind: 'away', at: stamp() };
+    log(`Mite tapped "Not tonight" and is away for the rest of the shift. ${change('Mite', S.mite.score, S.mite.score)} Nothing is counted against Mite.`);
+    S.phone = 'away';
+    render();
+  }
+
+  function backFromAway() {
+    S.away = false;
+    S.note = { kind: 'back', at: stamp() };
+    log(`Mite tapped "Actually, I'm free" and is back on the list.`, 'good');
+    S.phone = 'idle';
+    render();
+  }
+
+  function skipDay() {
+    if (S.ping || S.day >= 6) return;
+    S.day++;
+    S.missesTonight = 0;
+    if (S.away) {
+      S.away = false;
+      if (S.phone === 'away') S.phone = 'idle';
+      log(`New day. Mite's "not tonight" has ended. Back on the list.`);
+    }
+    if (S.note && ['missed', 'quick', 'taken', 'back', 'away'].includes(S.note.kind)) S.note = null;
+    const tally = { m: 0, take: 0, miss: 0, g: 0, out: 0, nobody: 0 };
+    SKIP_TIMES.forEach(t => {
+      S.minutes = t;
+      const c = nextCallout();
+      offer(c, lineFor(c), tally);
+    });
+    S.minutes = EVENING;
+    log(`${DAYS[S.day]}: 3 Eastgate callouts. Mite was pinged ${tally.m}× (took ${tally.take}, missed ${tally.miss}). The Gale was pinged ${tally.g}×. Someone from outside Eastgate took ${tally.out}.${tally.nobody ? ` Nobody took ${tally.nobody}.` : ''} Scores now: Mite ${f2(S.mite.score)}, The Gale ${f2(S.gale.score)}.`, 'day');
+    maybeQuietCheckin();
+    render();
+  }
+
+  function restart(mode, scenario) {
+    stopTimer();
+    toastId++;
+    S = fresh(mode || S.mode, scenario || S.scenario);
+    const rules = fix() ? 'with the fix' : 'today (4.2)';
+    if (S.scenario === 'launch') {
+      log(`Launch day, Monday evening. Mite starts at ${f2(S.mite.score)}, where today's rules left Mite by 6 Sep. The Gale starts at ${f2(S.gale.score)}, the median for the other twelve. Mite's last ping was last Saturday. Rules: ${rules}.`, 'day');
+    } else {
+      log(`Monday evening. Mite (score ${f2(S.mite.score)}) and The Gale (${f2(S.gale.score)}) are Kip's only responders in Eastgate. Rules: ${rules}.`, 'day');
+    }
+    snap('Start of the evening');
+    render();
+  }
+
+  /* ---------- Rendering ---------- */
+
+  const dayLabel = d => d < 0 ? 'last ' + DAYS[7 + d] : DAYS[d];
+
+  function render() {
+    document.querySelectorAll('[data-action="mode"]').forEach(b => b.classList.toggle('on', b.dataset.mode === S.mode));
+    document.querySelectorAll('[data-action="scenario"]').forEach(b => b.classList.toggle('on', b.dataset.scenario === S.scenario));
+    document.getElementById('guide').innerHTML = GUIDES[S.scenario];
+    document.getElementById('btn-callout').disabled = !!S.ping;
+    const skip = document.getElementById('btn-skip');
+    skip.disabled = !!S.ping || S.day >= 6;
+    skip.textContent = S.day >= 6 ? 'End of the week' : `Skip to ${DAYS[S.day + 1]}`;
+    document.getElementById('clock').textContent = `${DAYS[S.day]} ${now()} · Eastgate`;
+    renderConsole();
+    renderPhone();
+    renderBackstage();
+  }
+
+  function place(who) {
+    if (who === 'mite' && S.away) return 'Away tonight';
+    if (who === 'mite' && S.checkin) return 'Sitting out';
+    const mine = S[who].score, other = S[who === 'mite' ? 'gale' : 'mite'].score;
+    const otherOut = who === 'gale' && (S.away || S.checkin);
+    if (otherOut || mine > other) return '1st of 2 in Eastgate';
+    return mine === other ? 'Tied for 1st in Eastgate' : '2nd of 2 in Eastgate';
+  }
+
+  function miteWhy() {
+    const n = S.note;
+    if (S.away) return { tone: '', text: `Away tonight. Mite said "not tonight" at ${n ? n.at.split(' ')[1] : 'the check-in'}. Nothing counted against Mite.` };
+    if (S.checkin && S.checkinWhy === 'quiet') return { tone: 'accent', text: `No pings in 5 days, so Mite was asked "Still available?". Waiting for Mite's answer.` };
+    if (S.checkin) return { tone: 'accent', text: `Missed 3 pings in a row, so Mite was asked "Still available?". Sitting out until Mite answers. Missed pings don't lower Mite's place in line.` };
+    if (S.lateNos > 0 && S.mite.score < S.gale.score) return { tone: 'warn', text: `${plural(S.lateNos, 'late turn-down')} lowered Mite's place in line. A yes moves it back up.` };
+    const t = n ? n.at.split(' ')[1] : '';
+    if (n && n.kind === 'back') return { tone: 'good', text: `Mite confirmed "I'm here" at ${t}. Back in line.` };
+    if (n && n.kind === 'quick') return { tone: 'good', text: `Said a quick no at ${t}, so that callout moved on sooner.` };
+    if (n && n.kind === 'late') return { tone: 'warn', text: `Said no after the 40s window at ${t}. A late no lowers Mite's place in line.` };
+    if (n && n.kind === 'taken') return { tone: 'good', text: `Took a callout at ${t}.` };
+    if (S.missesTonight > 0) return { tone: '', text: `Missed ${plural(S.missesTonight, 'ping')} tonight. Missed pings don't lower Mite's place in line.` };
+    if (S.scenario === 'launch' && S.mite.score < R.NEUTRAL) return { tone: 'warn', text: `Mite's score is still low (${f2(S.mite.score)}) from pings missed before the fix. The fix stops new misses counting, but doesn't undo old ones.` };
+    return null;
+  }
+
+  function miteFlag() {
+    const since = S.mite.lastPing;
+    if (!fix() || S.day - since.day < 5) return '';
+    let reason;
+    if (S.checkin && S.checkinWhy === 'quiet') reason = `Mite's phone has asked "Still available?".`;
+    else if (S.checkin) reason = `Mite hasn't answered "Still available?" yet, so Mite is sitting out.`;
+    else if (S.lateNos > 0) reason = `${plural(S.lateNos, 'late turn-down')} lowered Mite's place in line.`;
+    else if (S.scenario === 'launch' && S.mite.score < R.NEUTRAL) reason = `Mite's score is still low from pings missed before the fix, and nothing in the fix lifts it.`;
+    else reason = `The Gale has been ahead of Mite on most Eastgate callouts.`;
+    return `<div class="flag">${badge(3)}<b>Mite hasn't been pinged since ${dayLabel(since.day)}.</b>${reason}</div>`;
+  }
+
+  function card(who) {
+    const r = S[who];
+    const isMite = who === 'mite';
+    const name = isMite ? 'Meteor Mite' : 'The Gale';
+    let pill = '<span class="pill">Available</span>';
+    if (!free(who) && !(isMite && S.ping)) pill = '<span class="pill ping">On a callout</span>';
+    if (isMite && S.ping) pill = '<span class="pill ping">Ping on phone</span>';
+    else if (isMite && S.away) pill = '<span class="pill away">Away tonight</span>';
+    else if (isMite && S.checkin) pill = '<span class="pill paused">Asked: still available?</span>';
+
+    let html = `<div class="card ${who}">
+      <div class="card-top"><div><h3>${name}</h3><div class="area">Eastgate</div></div>${pill}</div>
+      <div class="stat"><span>Pings this week</span><b>${r.pings}${fix() ? ` <span class="usual">(usual: ${USUAL})</span>` : ''}</b></div>
+      <div class="stat"><span>Last ping</span><b>${dayLabel(r.lastPing.day)} ${r.lastPing.t}</b></div>`;
+    if (fix()) html += `<div class="stat"><span>Place in line</span><b>${place(who)}</b></div>` + spark(who);
+
+    if (fix()) {
+      if (isMite) {
+        const why = miteWhy();
+        if (why) html += `<div class="why ${why.tone}">${badge(3)}${why.text}</div>`;
+        html += miteFlag();
+      } else if (S.galeCovered > 0) {
+        html += `<div class="why">${badge(3)}Picked up ${plural(S.galeCovered, 'callout')} Mite missed or passed on.</div>`;
+      }
+    }
+    return html + '</div>';
+  }
+
+  // A small line of one responder's score since the start, so Kip sees a slide as it starts.
+  function spark(who) {
+    const pts = S.history.map(p => p[who]);
+    if (pts.length < 2) return '';
+    const W = 200, H = 34;
+    const x = i => i * W / (pts.length - 1), y = v => 2 + (1 - v) * (H - 4);
+    const line = pts.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+    return `<div class="spark">
+      <div class="spark-head"><span>${badge(3)}Score since ${S.history[0].at.split(' ')[0]}</span><b>${f2(pts[0])} → ${f2(pts[pts.length - 1])}</b></div>
+      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+        <line x1="0" x2="${W}" y1="${y(R.NEUTRAL)}" y2="${y(R.NEUTRAL)}" style="stroke:#9a9a90" stroke-width="1" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>
+        <polyline points="${line}" fill="none" style="stroke:var(--${who})" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      </svg>
+    </div>`;
+  }
+
+  function renderConsole() {
+    document.getElementById('console-note').innerHTML = fix()
+      ? `${badge(3)}With the fix, each card says how this week compares with usual, and why.`
+      : 'Roughly what Kip sees today: counts, but no reason and nothing to compare with.';
+    document.getElementById('cards').innerHTML = card('mite') + card('gale');
+  }
+
+  function appHead() {
+    return `<div class="app-head"><b>Rook</b><span>${DAYS[S.day]} ${now()}</span></div>`;
+  }
+
+  function renderPhone() {
+    const el = document.getElementById('screen');
+    let html = appHead();
+    if (S.phone === 'ping' && S.ping) {
+      const c = S.ping.c;
+      html += `<div class="ping-card">
+        <div class="ping-kicker">New callout · #${c.num}</div>
+        <h4>${c.what}</h4>
+        <div class="ping-meta">Eastgate · ${c.mite} min away</div>
+        <div class="count"><span class="left" id="cd-left">1:00</span><span class="phase" id="cd-phase"></span></div>
+        <div class="bar"><div class="fill" id="cd-fill" style="width:100%"></div>${fix() ? '<div class="mark"></div>' : ''}</div>
+        <div class="bar-legend"><span>moves on at 0:00</span>${fix() ? '<span>green line: quick no ends</span>' : ''}</div>
+        <div class="answer">
+          <button class="take" data-action="take">Take it</button>
+          <button class="decline" data-action="decline">${fix() ? "Can't make it" : 'Turn down'}</button>
+        </div>
+        ${fix() ? `<div class="hint">${badge(4)}Can't make it? Tell us now and help gets there faster.</div>` : ''}
+      </div>
+      <div class="runout"><button data-action="runout">Presenter: let it run out</button></div>`;
+    } else if (S.phone === 'checkin') {
+      html += `<div class="checkin">
+        ${S.checkinWhy === 'quiet'
+          ? `<h4>${badge(2)}It's been quiet.</h4>
+        <p>No pings since ${dayLabel(S.mite.lastPing.day)}. You're still on the list. Still available? Tap yes and we'll move you back up.</p>`
+          : `<h4>${badge(2)}Missed a few.</h4>
+        <p>Still available tonight? Missed pings aren't held against you.</p>`}
+        <div class="answer">
+          <button class="take" data-action="ci-yes">Yes, I'm here</button>
+          <button class="decline" data-action="ci-no">Not tonight</button>
+        </div>
+      </div>`;
+    } else if (S.phone === 'away') {
+      html += `<div class="idle-mid"><h4>Away tonight</h4><p>No pings until tomorrow.<br>Nothing is counted against you.</p></div>
+      <div class="answer"><button class="decline" data-action="unaway">Actually, I'm free</button></div>`;
+    } else if (S.phone === 'toast' && S.toast) {
+      html += `<div class="toast ${S.toast.tone}">${S.toast.text}</div>`;
+    } else {
+      const r = S.mite;
+      html += `<div class="idle-mid"><span class="dot"></span><h4>You're available</h4><p>Waiting for a callout…</p></div>
+      <div class="idle-foot">Pings this week: ${r.pings}<br>Last ping: ${dayLabel(r.lastPing.day)} ${r.lastPing.t}</div>`;
+    }
+    el.innerHTML = html;
+    if (S.phone === 'ping') updateCountdown();
+  }
+
+  function updateCountdown() {
+    if (!S.ping) return;
+    const e = S.ping.elapsed;
+    const left = Math.max(0, Math.ceil(R.WAIT - e));
+    const l = document.getElementById('cd-left');
+    if (!l) return;
+    l.textContent = '0:' + String(left).padStart(2, '0');
+    const fill = document.getElementById('cd-fill');
+    fill.style.width = (Math.max(0, R.WAIT - e) / R.WAIT * 100) + '%';
+    const phase = document.getElementById('cd-phase');
+    if (fix()) {
+      const qLeft = Math.max(0, R.QUICK - e);
+      fill.style.background = qLeft > 0 ? 'var(--good)' : 'var(--accent)';
+      phase.textContent = qLeft > 0 ? `Quick no: ${Math.ceil(qLeft)}s left` : 'Quick-no window closed';
+    } else {
+      phase.textContent = 'then it moves on';
+    }
+  }
+
+  function renderBackstage() {
+    const rules = fix()
+      ? [['Yes +0.08', false], ['Missed: no change', true], ['Quick no (≤40s): +0.02, up to 0.50', true], ['Late no: −0.12', false], ['3 misses in a row → "still available?"', true], ['Ping wait 60s', false]]
+      : [['Yes +0.08', false], ['Turned down −0.12', false], ['Missed −0.12 (same as a no)', false], ['Only a yes earns points back', false], ['Ping wait 60s', false]];
+    document.getElementById('rules').innerHTML = rules.map(([t, c]) => `<span class="rule ${c ? 'changed' : ''}">${t}</span>`).join('');
+    const row = (label, v, color) => `<div class="score-row"><span>${label}</span><div class="track"><div class="val" style="width:${v * 100}%;background:${color}"></div><div class="neutral"></div></div><b>${f2(v)}</b></div>`;
+    document.getElementById('scores').innerHTML =
+      row('Meteor Mite', S.mite.score, 'var(--mite)') + row('The Gale', S.gale.score, 'var(--gale)') +
+      (S.unfilled ? `<div style="font-size:13px;color:var(--bad)">Callouts nobody took: ${S.unfilled}</div>` : '');
+    document.getElementById('log').innerHTML = S.log.slice(0, 60)
+      .map(e => `<li class="${e.tone}"><time>${e.at}</time><span>${e.text}</span></li>`).join('');
+    renderChart();
+    document.getElementById('hist-table').innerHTML = `<table>
+      <tr><th>When</th><th>What happened</th><th class="num">Mite</th><th class="num">The Gale</th></tr>
+      ${S.history.slice().reverse().map(p => `<tr><td>${p.at}</td><td>${p.label}</td><td class="num">${f2(p.mite)}</td><td class="num">${f2(p.gale)}</td></tr>`).join('')}
+    </table>`;
+  }
+
+  /* ---------- Score history chart ---------- */
+
+  const CH = { W: 720, H: 220, l: 40, r: 92, t: 12, b: 30 };
+  const chX = (i, n) => CH.l + (n <= 1 ? 0 : i * (CH.W - CH.l - CH.r) / (n - 1));
+  const chY = v => CH.t + (1 - v) * (CH.H - CH.t - CH.b);
+
+  function renderChart() {
+    const H = S.history, n = H.length, last = H[n - 1];
+    let s = `<svg viewBox="0 0 ${CH.W} ${CH.H}" role="img" aria-label="Score history for Meteor Mite and The Gale">`;
+    [0, 0.25, 0.5, 0.75, 1].forEach(v => {
+      const y = chY(v), mid = v === R.NEUTRAL;
+      s += `<line x1="${CH.l}" x2="${CH.W - CH.r}" y1="${y}" y2="${y}" style="stroke:${mid ? '#9a9a90' : '#ececE6'}" stroke-width="1"${mid ? ' stroke-dasharray="4 3"' : ''}/>`;
+      s += `<text x="${CH.l - 8}" y="${y + 4}" text-anchor="end" font-size="11" style="fill:var(--muted)">${v.toFixed(2)}</text>`;
+    });
+    H.forEach((p, i) => {
+      if (i > 0 && p.day === H[i - 1].day) return;
+      const x = chX(i, n);
+      if (i > 0) s += `<line x1="${x}" x2="${x}" y1="${CH.t}" y2="${CH.H - CH.b}" style="stroke:var(--line)" stroke-width="1"/>`;
+      s += `<text x="${x + 4}" y="${CH.H - 10}" font-size="11" style="fill:var(--muted)">${DAYS[p.day]}</text>`;
+    });
+    const path = k => H.map((p, i) => `${i ? 'L' : 'M'}${chX(i, n).toFixed(1)},${chY(p[k]).toFixed(1)}`).join('');
+    if (n > 1) {
+      s += `<path d="${path('gale')}" fill="none" style="stroke:var(--gale)" stroke-width="2" stroke-linejoin="round"/>`;
+      s += `<path d="${path('mite')}" fill="none" style="stroke:var(--mite)" stroke-width="2" stroke-linejoin="round"/>`;
+    }
+    // End markers and direct labels, nudged apart when the two lines end close together.
+    let ym = chY(last.mite), yg = chY(last.gale);
+    if (Math.abs(ym - yg) < 14) { const c = (ym + yg) / 2, up = ym <= yg ? -7 : 7; ym = c + up; yg = c - up; }
+    const xe = chX(n - 1, n);
+    s += `<circle cx="${xe}" cy="${chY(last.gale)}" r="4" style="fill:var(--gale);stroke:#fff" stroke-width="2"/>`;
+    s += `<circle cx="${xe}" cy="${chY(last.mite)}" r="4" style="fill:var(--mite);stroke:#fff" stroke-width="2"/>`;
+    s += `<text x="${xe + 10}" y="${ym + 4}" font-size="12" style="fill:var(--ink)">Mite ${f2(last.mite)}</text>`;
+    s += `<text x="${xe + 10}" y="${yg + 4}" font-size="12" style="fill:var(--ink)">The Gale ${f2(last.gale)}</text>`;
+    // Hover layer
+    s += `<line id="hx" y1="${CH.t}" y2="${CH.H - CH.b}" style="stroke:var(--muted)" stroke-width="1" visibility="hidden"/>`;
+    s += `<circle id="hm" r="5" style="fill:var(--mite);stroke:#fff" stroke-width="2" visibility="hidden"/>`;
+    s += `<circle id="hg" r="5" style="fill:var(--gale);stroke:#fff" stroke-width="2" visibility="hidden"/>`;
+    document.getElementById('chart').innerHTML = s + '</svg>';
+  }
+
+  function chartHover(e) {
+    const svg = document.querySelector('#chart svg'), H = S.history, n = H.length;
+    if (!svg || n < 1) return;
+    const box = svg.getBoundingClientRect(), scale = CH.W / box.width;
+    const xv = (e.clientX - box.left) * scale;
+    const i = n <= 1 ? 0 : Math.max(0, Math.min(n - 1, Math.round((xv - CH.l) / ((CH.W - CH.l - CH.r) / (n - 1)))));
+    const p = H[i], x = chX(i, n);
+    const hx = svg.querySelector('#hx'), hm = svg.querySelector('#hm'), hg = svg.querySelector('#hg');
+    hx.setAttribute('x1', x); hx.setAttribute('x2', x); hx.setAttribute('visibility', 'visible');
+    hm.setAttribute('cx', x); hm.setAttribute('cy', chY(p.mite)); hm.setAttribute('visibility', 'visible');
+    hg.setAttribute('cx', x); hg.setAttribute('cy', chY(p.gale)); hg.setAttribute('visibility', 'visible');
+    const tip = document.getElementById('tip');
+    tip.innerHTML = `<b>${p.at}</b><br>${p.label}<br><span class="dot" style="background:var(--mite)"></span>Mite ${f2(p.mite)} &nbsp; <span class="dot" style="background:var(--gale)"></span>The Gale ${f2(p.gale)}`;
+    tip.hidden = false;
+    const px = x / scale, wrapW = box.width;
+    tip.style.left = (px + 270 > wrapW ? px - 262 : px + 12) + 'px';
+  }
+
+  function chartLeave() {
+    const svg = document.querySelector('#chart svg');
+    if (svg) ['#hx', '#hm', '#hg'].forEach(id => svg.querySelector(id).setAttribute('visibility', 'hidden'));
+    document.getElementById('tip').hidden = true;
+  }
+
+  const wrap = document.getElementById('chart-wrap');
+  wrap.addEventListener('mousemove', chartHover);
+  wrap.addEventListener('mouseleave', chartLeave);
+
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-action]');
+    if (!b || b.disabled) return;
+    const a = b.dataset.action;
+    if (a === 'mode') { if (b.dataset.mode !== S.mode) restart(b.dataset.mode, S.scenario); }
+    else if (a === 'scenario') { if (b.dataset.scenario !== S.scenario) restart(S.mode, b.dataset.scenario); }
+    else if (a === 'callout') newCallout();
+    else if (a === 'skip') skipDay();
+    else if (a === 'restart') restart();
+    else if (a === 'take') take();
+    else if (a === 'decline') decline();
+    else if (a === 'runout') miss();
+    else if (a === 'ci-yes') checkinYes();
+    else if (a === 'ci-no') checkinNo();
+    else if (a === 'unaway') backFromAway();
+  });
+
+  S = fresh('today', 'before');
+  restart('today', 'before');
+</script>
+</body>
+</html>

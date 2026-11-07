@@ -170,3 +170,23 @@ Module 4 notes:
   - Step 2: test a 75s wait. Needs answer-time tracking, or a live test.
 - **Proposed mission metric:** share of callouts with a yes within X minutes.
   Guardrail: nobody goes 5+ days without a ping.
+
+Module 5 notes:
+- **Brief** for Helen, built around Meteor Mite: `05-super-speed/brief.md`. Keeps
+  the 60s wait.
+  1. A miss isn't a no.
+  2. A "still available?" check-in after 3 misses in a row or a 5-day silence.
+  3. Kip's cards show usual pings, a reason, the 5-day warning and a score line.
+  4. A quick no (≤40s) earns +0.02, up to 0.50.
+- **Decided:** a "yes" to the check-in resets to neutral (0.50), not the middle
+  of the line. It's simpler and harder to game. The cost is that Mite climbs
+  back one yes at a time.
+- **Launch-day gap:** the fix stops new damage but doesn't lift the quiet four,
+  who are still at 0. Only the 5-day check-in gets them asked again. At 0, Mite
+  must be about 18 min closer than a responder from another area to win a
+  callout. At 0.50, about 8 min.
+- **Prototype:** `05-super-speed/prototype.html`. It has rules today vs with
+  the fix, before-quiet vs launch-day starts, busy time, a responder from
+  another area, and score history. Brief still lacks a named owner.
+- **Open:** what X minutes is. Score history isn't stored today, so Kip's
+  score line depends on Wen.
