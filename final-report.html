@@ -1,0 +1,1640 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Release 4.2 Final Report</title>
+<style>
+  :root {
+    --paper: #f7f6f2;
+    --card: #ffffff;
+    --ink: #15171c;
+    --ink-2: #3f4550;
+    --muted: #6b7280;
+    --line: #e3e1da;
+    --soft: #efeee9;
+    --navy: #0e1726;
+    --navy-2: #172338;
+    --mite: #eb6834;
+    --gale: #2a78d6;
+    --aqua: #1baf7a;
+    --amber: #eda100;
+    --slate: #475467;
+    --good: #137a4b;
+    --good-soft: #e3f3ea;
+    --warn: #a74b06;
+    --warn-soft: #fdf0e2;
+    --bad: #b42318;
+    --bad-soft: #fcebe9;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-snap-type: y proximity; scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 17px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--gale); }
+  .slide {
+    min-height: 100vh;
+    padding: 9vh max(16px, 6vw) 8vh;
+    scroll-snap-align: start;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .slide + .slide { border-top: 1px solid var(--line); }
+  .inner { max-width: 1180px; width: 100%; margin: 0 auto; }
+  .kicker { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 10px; }
+  .kicker .n { color: var(--mite); margin-right: 8px; }
+  h1, h2 { letter-spacing: -.02em; line-height: 1.08; margin: 0 0 18px; }
+  h2 { font-size: clamp(30px, 4.2vw, 50px); max-width: 22ch; }
+  h3 { font-size: 19px; margin: 0 0 6px; letter-spacing: -.01em; }
+  .lede { font-size: clamp(18px, 1.7vw, 22px); color: var(--ink-2); max-width: 62ch; margin: 0 0 28px; }
+  .hl { background: linear-gradient(transparent 62%, rgba(235,104,52,.28) 62%); }
+  .grid { display: grid; gap: 18px; }
+  .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .split { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+  @media (max-width: 960px) {
+    .g3, .g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .split { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 620px) {
+    .g2, .g3, .g4 { grid-template-columns: 1fr; }
+    body { font-size: 16px; }
+  }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+  .card p { margin: 0; color: var(--ink-2); font-size: 15.5px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 14px; }
+
+  /* Hero */
+  .hero { background: radial-gradient(1200px 600px at 85% 10%, rgba(42,120,214,.35), transparent 60%),
+                      radial-gradient(900px 500px at 10% 100%, rgba(235,104,52,.32), transparent 60%), var(--navy);
+          color: #eef1f6; border-top: 0; }
+  .hero .kicker { color: #9fb0c8; }
+  .hero h1 { font-size: clamp(40px, 6.4vw, 84px); max-width: 15ch; }
+  .hero h1 em { font-style: normal; color: var(--mite); }
+  .hero .lede { color: #c9d3e1; }
+  .hero-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+  .chip { font-size: 13.5px; padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.22); color: #dfe6f0; }
+  .scroll-hint { position: absolute; bottom: 5vh; left: max(16px, 6vw); font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #9fb0c8; }
+
+  /* Executive summary */
+  .exec .card h3 { display: flex; align-items: center; gap: 10px; }
+  .exec .card h3 .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .ask { margin-top: 18px; background: var(--navy); color: #eef1f6; border-radius: 14px; padding: 20px 24px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: center; }
+  .ask .tag { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; background: var(--mite); color: #fff; padding: 6px 10px; border-radius: 6px; font-weight: 700; }
+  .ask p { margin: 0; color: #dfe6f0; }
+  .ask b { color: #fff; }
+  @media (max-width: 620px) { .ask { grid-template-columns: 1fr; } }
+
+  /* KPI tiles */
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+  .kpi .label { font-size: 13.5px; color: var(--muted); }
+  .kpi .val { font-size: clamp(26px, 2.6vw, 34px); font-weight: 700; letter-spacing: -.02em; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+  .kpi .val .from { color: var(--muted); font-weight: 500; }
+  .kpi .val .arrow { color: var(--muted); font-weight: 400; margin: 0 4px; }
+  .kpi .note { font-size: 13.5px; color: var(--ink-2); }
+  .kpi.alarm { border-color: #f3c2bc; background: linear-gradient(180deg, var(--bad-soft), var(--card) 70%); }
+
+  /* Charts */
+  .chart { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px 12px; position: relative; }
+  .chart-title { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; align-items: baseline; margin-bottom: 8px; }
+  .chart-title b { font-size: 15.5px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); }
+  .sw { display: inline-block; width: 16px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .chart { overflow: hidden; }
+  .tip { position: absolute; pointer-events: none; max-width: calc(100% - 8px); background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font-size: 13px; line-height: 1.45; box-shadow: 0 6px 18px rgba(0,0,0,.12); min-width: 170px; z-index: 5; }
+  .tip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+  .tip[hidden] { display: none; }
+  details.table { margin-top: 6px; font-size: 13px; }
+  details.table summary { cursor: pointer; color: var(--muted); }
+  details.table table { border-collapse: collapse; width: 100%; margin-top: 6px; }
+  details.table th, details.table td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+  details.table .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .source { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+
+  .callout { border-left: 4px solid var(--mite); background: var(--card); border-radius: 0 12px 12px 0; padding: 16px 20px; }
+  .callout p { margin: 0 0 8px; }
+  .callout p:last-child { margin-bottom: 0; }
+  blockquote { margin: 0; font-size: 19px; line-height: 1.45; }
+  blockquote cite { display: block; font-style: normal; font-size: 14px; color: var(--muted); margin-top: 8px; }
+  .big-number { font-size: clamp(54px, 7vw, 96px); font-weight: 800; letter-spacing: -.04em; line-height: 1; }
+  .big-number .arrow { color: var(--muted); font-weight: 400; }
+
+  /* Loop diagram */
+  .loop svg { width: 100%; height: auto; display: block; }
+  code, .code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; background: var(--soft); padding: 1px 6px; border-radius: 5px; }
+  pre.code { display: block; padding: 14px 16px; border-radius: 10px; background: #12161f; color: #d9e1ec; font-size: 13.5px; line-height: 1.55; overflow-x: auto; margin: 0; white-space: pre; }
+  pre.code .c { color: #8a98ad; }
+  pre.code .k { color: #f0a37f; }
+
+  /* Comic */
+  .comic { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px; }
+  .comic img { display: block; width: auto; max-width: 100%; max-height: 52vh; height: auto; margin: 0 auto; border-radius: 8px; }
+
+  /* Module cards */
+  .mod { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+  .mod-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .mod-num { font-size: 12.5px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; color: var(--mite); }
+  .mod-skill { font-size: 12.5px; color: var(--muted); }
+  .prompt { font-size: 14.5px; background: var(--navy); color: #e7ecf4; border-radius: 10px; padding: 12px 14px; position: relative; }
+  .prompt::before { content: "My prompt"; display: block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #8ea1bd; margin-bottom: 4px; font-weight: 700; }
+  .found { font-size: 14.5px; color: var(--ink-2); }
+  .found b { color: var(--ink); }
+  .artifact { font-size: 12.5px; color: var(--muted); margin-top: auto; }
+
+  /* Options */
+  .opt { display: flex; gap: 12px; align-items: flex-start; }
+  .opt .badge { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 700; color: #fff; background: var(--slate); }
+  .opt.yes .badge { background: var(--good); }
+  .opt.no .badge { background: var(--bad); }
+
+  /* Prototype */
+  .proto-frame { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: 0 18px 40px rgba(14,23,38,.12); }
+  .proto-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--soft); border-bottom: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+  .proto-bar i { width: 10px; height: 10px; border-radius: 50%; background: #d4d2ca; display: inline-block; }
+  .proto-bar span { margin-left: 8px; }
+  .proto-bar a { margin-left: auto; }
+  .proto-frame iframe { display: block; width: 100%; height: 860px; border: 0; background: #f3f3ef; }
+  .steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  .steps li { counter-increment: s; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; font-size: 15.5px; color: var(--ink-2); }
+  .steps li::before { content: counter(s); width: 26px; height: 26px; border-radius: 50%; background: var(--mite); color: #fff; font-weight: 700; font-size: 13px; display: grid; place-items: center; }
+  .fixlist { display: grid; gap: 10px; margin-bottom: 18px; }
+  .fixlist .card { padding: 14px 16px; }
+
+  /* Checklist */
+  .checks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 18px; }
+  @media (max-width: 960px) { .checks { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .check { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 14px; }
+  .check b { display: block; font-size: 15px; margin-bottom: 2px; }
+  .check .n { font-size: 12px; color: var(--muted); font-weight: 700; }
+  .check.new { border-color: var(--mite); box-shadow: inset 0 0 0 1px var(--mite); }
+  .check.new .n { color: var(--mite); }
+  table.results { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: 14.5px; }
+  table.results th, table.results td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: center; }
+  table.results th:first-child, table.results td:first-child { text-align: left; }
+  table.results thead th { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--soft); }
+  .ok { color: var(--good); font-weight: 700; }
+  .fl { color: var(--bad); font-weight: 700; }
+  .tw { overflow-x: auto; }
+
+  /* Plan */
+  .lane { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+  .lane h3 { display: flex; align-items: baseline; gap: 10px; }
+  .lane h3 small { font-size: 13px; color: var(--muted); font-weight: 500; }
+  .lane ul { margin: 8px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 15px; }
+  .lane li { margin: 6px 0; }
+  .owner { font-size: 12px; font-weight: 700; color: var(--gale); background: #e7f0fb; padding: 1px 7px; border-radius: 999px; margin-left: 4px; white-space: nowrap; }
+  .lane.now { border-top: 4px solid var(--mite); }
+  .lane.next { border-top: 4px solid var(--gale); }
+  .lane.later { border-top: 4px solid var(--slate); }
+  .guard { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+  @media (max-width: 760px) { .guard { grid-template-columns: 1fr; } }
+  .guard .card b { display: block; margin-bottom: 4px; }
+
+  /* Closing */
+  .closing { background: var(--navy); color: #eef1f6; }
+  .closing .kicker { color: #9fb0c8; }
+  .closing h2 { max-width: 24ch; }
+  .closing .lede { color: #c9d3e1; }
+  .lesson { border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 14px 16px; background: rgba(255,255,255,.04); }
+  .lesson .m { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--mite); font-weight: 700; }
+  .lesson p { margin: 4px 0 0; color: #dfe6f0; font-size: 15px; }
+
+  /* Navigation chrome */
+  .progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--mite); width: 0; z-index: 20; transition: width .2s; }
+  .dots { position: fixed; right: 14px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 20; }
+  .dots button { width: 10px; height: 10px; border-radius: 50%; border: 0; padding: 0; background: rgba(120,128,140,.4); cursor: pointer; }
+  .dots button.on { background: var(--mite); transform: scale(1.3); }
+  @media (max-width: 620px) { .dots { display: none; } }
+  .counter { position: fixed; right: 16px; bottom: 14px; font-size: 12.5px; color: var(--muted); background: rgba(247,246,242,.9); padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); z-index: 20; font-variant-numeric: tabular-nums; }
+  @media print {
+    .progress, .dots, .counter, .scroll-hint { display: none; }
+    .slide { min-height: auto; page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<nav class="dots" id="dots" aria-label="Slides"></nav>
+<div class="counter" id="counter"></div>
+
+<!-- 1 · Title -->
+<section class="slide hero" data-title="Title">
+  <div class="inner">
+    <div class="kicker">Rook Dispatch · Release 4.2 · Final report</div>
+    <h1>Four responders went silent, and <em>our dashboard said we were fine.</em></h1>
+    <p class="lede">What Release 4.2 broke, how I proved it from the data and the code, the fix I'd ship, and the gate that stops the next one. Written for the CEO and the Director of Product.</p>
+    <div class="hero-meta">
+      <span class="chip">Prepared by the Dispatch PM</span>
+      <span class="chip">Claude Code for PMs · cohort ccpm-2026.1</span>
+      <span class="chip">Data: 29 Jun – 6 Sep 2026 · 1,696 pings · 147 tickets</span>
+    </div>
+  </div>
+  <div class="scroll-hint">Scroll, or use ↑ ↓</div>
+</section>
+
+<!-- 2 · Executive summary -->
+<section class="slide exec" data-title="The answer">
+  <div class="inner">
+    <div class="kicker"><span class="n">01</span>The answer on one page</div>
+    <h2>One small rule turned a timing change into a trap.</h2>
+    <div class="grid g2">
+      <div class="card">
+        <h3><span class="dot" style="background:var(--mite)"></span>What happened</h3>
+        <p>4.2 cut the ping wait from 90 to 60 seconds. Missed pings jumped from 2% to 23%. The code scores a miss exactly like a "no" (−0.12), and only a "yes" earns points back (+0.08). Four responders sank to a score of zero, and Dispatch stopped asking them: <b>51 pings a week fell to 6</b>.</p>
+      </div>
+      <div class="card">
+        <h3><span class="dot" style="background:var(--gale)"></span>Why nobody caught it</h3>
+        <p>The headline metric recovered. Acceptance was back to 75% by September because the four weren't being asked any more, and the other twelve quietly absorbed their work. No brief, no experiment, no owner watching: Priya left on 21 Aug and Wen was away until the 24th.</p>
+      </div>
+      <div class="card">
+        <h3><span class="dot" style="background:var(--bad)"></span>What it cost</h3>
+        <p>At the peak, <b>1 in 5 callouts found nobody</b> (19%, up from about 5%). Support tickets went up 4×. A quarter of the roster sat idle while the rest carried 27% more, and Rook bills per active responder.</p>
+      </div>
+      <div class="card">
+        <h3><span class="dot" style="background:var(--good)"></span>What I'd do</h3>
+        <p>Keep the 60-second wait and the proximity change. Stop counting a miss as a no, and give quiet responders a way back with a 5-day "still available?" check-in. Show handlers why the work is lopsided. Make "system health" a release gate.</p>
+      </div>
+    </div>
+    <div class="ask">
+      <span class="tag">Decision needed</span>
+      <p><b>Approve a two-week staged rollout in two areas, starting with Eastgate</b>, behind a flag, with guardrails at both ends and a rollback trigger. Engineering says the core change is small. The risk is in shipping it the way 4.2 shipped, not in the code.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · Business impact -->
+<section class="slide" data-title="What it cost">
+  <div class="inner">
+    <div class="kicker"><span class="n">02</span>What it cost the business</div>
+    <h2>The mission metric doubled in the wrong direction.</h2>
+    <div class="grid g3" style="margin-bottom:18px">
+      <div class="kpi alarm"><div class="label">Callouts nobody took (weekly)</div><div class="val"><span class="from">5.5%</span><span class="arrow">→</span>19%</div><div class="note">Worst week after 4.2. People in trouble with no responder.</div></div>
+      <div class="kpi"><div class="label">Pings missed</div><div class="val"><span class="from">2.3%</span><span class="arrow">→</span>23%</div><div class="note">Nobody answered inside 60 seconds.</div></div>
+      <div class="kpi"><div class="label">Support tickets a week</div><div class="val"><span class="from">5–7</span><span class="arrow">→</span>24–31</div><div class="note">About 4×. "Is my account broken?" alone: 30.</div></div>
+      <div class="kpi alarm"><div class="label">Pings to the quiet four, a week</div><div class="val"><span class="from">51</span><span class="arrow">→</span>6</div><div class="note">Vesper, Farlight, Meteor Mite, The Undertow.</div></div>
+      <div class="kpi"><div class="label">Load on the other twelve</div><div class="val">+27%</div><div class="note">10.3 → 13.1 pings each a week. Fragile, not fixed.</div></div>
+      <div class="kpi"><div class="label">Roster at risk</div><div class="val">4 of 16</div><div class="note">A quarter of responders idle. Rook bills per active responder.</div></div>
+    </div>
+    <div class="chart" id="chart-coverage"></div>
+  </div>
+</section>
+
+<!-- 4 · The average hid it -->
+<section class="slide" data-title="The average hid it">
+  <div class="inner split">
+    <div>
+      <div class="kicker"><span class="n">03</span>Why the dashboard looked fine</div>
+      <h2>The average hid four people.</h2>
+      <div class="chart" id="chart-load"></div>
+    </div>
+    <div style="display:grid;gap:16px">
+      <div class="callout">
+        <p><b>Acceptance rate: 75.8% → 54.3% → 75.2%.</b> By early September the headline number was back to normal.</p>
+        <p class="muted small">It recovered because the people who were missing pings stopped being asked. The system "healed" by quietly removing a quarter of its capacity.</p>
+      </div>
+      <div class="callout" style="border-color:var(--gale)">
+        <p><b>Coverage came back by overloading the rest.</b> The other twelve went from about 10 to 13 pings each a week. The Gale, in Eastgate, hit 15–20.</p>
+        <p class="muted small">One more bad week for them and the same loop starts from the other end: tired responders miss pings too.</p>
+      </div>
+      <div class="callout" style="border-color:var(--slate)">
+        <p><b>Lesson for how we measure:</b> every success metric needs a guardrail on the distribution, not just the average. Nobody idle for 5+ days. Nobody far above their usual load.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · Root cause loop -->
+<section class="slide" data-title="Root cause">
+  <div class="inner split">
+    <div class="loop">
+      <div class="kicker"><span class="n">04</span>Root cause</div>
+      <h2>A loop with no brake.</h2>
+      <svg viewBox="0 0 620 470" role="img" aria-label="Reinforcing loop: a shorter ping wait causes more misses, misses lower the score, a lower score means fewer pings, and fewer pings means no chance to earn points back">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker>
+          <marker id="ar2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#eb6834"/></marker>
+        </defs>
+        <g font-family="inherit">
+          <rect x="150" y="8" width="240" height="66" rx="12" fill="#0e1726"/>
+          <text x="270" y="36" text-anchor="middle" fill="#fff" font-size="16" font-weight="700">4.2: ping wait 90s → 60s</text>
+          <text x="270" y="58" text-anchor="middle" fill="#c9d3e1" font-size="13">config.py · the trigger</text>
+          <path d="M392 41 C 470 41, 475 70, 475 112" fill="none" stroke="#6b7280" stroke-width="2" marker-end="url(#ar)"/>
+
+          <rect x="350" y="118" width="250" height="66" rx="12" fill="#fff" stroke="#e3e1da"/>
+          <text x="475" y="146" text-anchor="middle" fill="#15171c" font-size="15" font-weight="700">More pings missed</text>
+          <text x="475" y="167" text-anchor="middle" fill="#6b7280" font-size="13">2% → 23% in the release week</text>
+
+          <rect x="350" y="290" width="250" height="66" rx="12" fill="#fff" stroke="#e3e1da"/>
+          <text x="475" y="318" text-anchor="middle" fill="#15171c" font-size="15" font-weight="700">Miss scored as a "no"</text>
+          <text x="475" y="339" text-anchor="middle" fill="#6b7280" font-size="13">−0.12 · history.py:35</text>
+
+          <rect x="20" y="290" width="250" height="66" rx="12" fill="#fff" stroke="#e3e1da"/>
+          <text x="145" y="318" text-anchor="middle" fill="#15171c" font-size="15" font-weight="700">Score sinks</text>
+          <text x="145" y="339" text-anchor="middle" fill="#6b7280" font-size="13">Mite 1.00 → 0.04 in 18 days</text>
+
+          <rect x="20" y="118" width="250" height="66" rx="12" fill="#fff" stroke="#e3e1da"/>
+          <text x="145" y="146" text-anchor="middle" fill="#15171c" font-size="15" font-weight="700">Asked less, then not at all</text>
+          <text x="145" y="167" text-anchor="middle" fill="#6b7280" font-size="13">~12 → ~1 ping a week</text>
+
+          <path d="M475 186 L475 284" fill="none" stroke="#eb6834" stroke-width="2.5" marker-end="url(#ar2)"/>
+          <path d="M348 323 L276 323" fill="none" stroke="#eb6834" stroke-width="2.5" marker-end="url(#ar2)"/>
+          <path d="M95 288 L95 190" fill="none" stroke="#eb6834" stroke-width="2.5" marker-end="url(#ar2)"/>
+          <path d="M195 186 L195 284" fill="none" stroke="#eb6834" stroke-width="2.5" marker-end="url(#ar2)"/>
+          <text x="86" y="236" text-anchor="end" fill="#6b7280" font-size="12">ranked</text>
+          <text x="86" y="251" text-anchor="end" fill="#6b7280" font-size="12">lower</text>
+          <text x="205" y="236" fill="#6b7280" font-size="12">no chance</text>
+          <text x="205" y="251" fill="#6b7280" font-size="12">to say yes</text>
+          <circle cx="145" cy="239" r="22" fill="#eb6834"/>
+          <text x="145" y="246" text-anchor="middle" fill="#fff" font-size="19" font-weight="800">R</text>
+          <text x="330" y="232" fill="#6b7280" font-size="12.5">R = a reinforcing loop:</text>
+          <text x="330" y="249" fill="#6b7280" font-size="12.5">each turn makes the next worse</text>
+          <text x="310" y="402" text-anchor="middle" fill="#3f4550" font-size="14">No yes to earn back: +0.08 only on a "yes" (history.py:25).</text>
+          <text x="310" y="424" text-anchor="middle" fill="#3f4550" font-size="14">Someone who's never asked can't say yes. Nothing else moves the score.</text>
+          <text x="310" y="456" text-anchor="middle" fill="#b42318" font-size="14" font-weight="700">Missing brake: no recovery, no reset, no alert.</text>
+        </g>
+      </svg>
+    </div>
+    <div style="display:grid;gap:16px">
+      <pre class="code"><span class="c"># history.py · written in 2019, never answered</span>
+<span class="c"># TODO(2019): should this ease back toward NEUTRAL_SCORE on its</span>
+<span class="c"># own after a while? ...</span>
+<span class="c"># Leaving it as-is for now.</span>
+<span class="k">def</span> record_declined(responder):
+    <span class="c">"""They turned it down, or we ran out of time waiting.</span>
+<span class="c">    Same either way — we asked and we didn't get a yes."""</span></pre>
+      <div class="callout">
+        <p><b>The warning signs were all on record.</b></p>
+        <p class="small">Wen flagged the missing brake in 2019. On 14 Aug, two days after release, Marcus asked whether the change was meant to hit responders who'd been turning jobs down. Nobody answered. Missed and turned-down pings are stored separately, so the data to tell them apart was always there.</p>
+      </div>
+      <div class="callout" style="border-color:var(--slate)">
+        <p class="small"><b>Not seasonal.</b> Early August ran at 77.9% taken. The drop starts on release day, and missed pings begin on 12 Aug itself. Past turn-downs don't predict who went quiet. Misses after 4.2 do.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 · One responder -->
+<section class="slide" data-title="One responder">
+  <div class="inner split">
+    <div>
+      <div class="kicker"><span class="n">05</span>The same week, two responders, one handler</div>
+      <h2>Mite sank. The Gale burned out.</h2>
+      <div class="chart" id="chart-score"></div>
+    </div>
+    <div style="display:grid;gap:16px">
+      <div class="callout">
+        <blockquote>"Mite thinks Mite's been forgotten. Gale's exhausted. I'm looking at two cards on the same screen that might as well be two different products."
+          <cite>Kip, handler for Meteor Mite and The Gale · interview, 4 Sep</cite></blockquote>
+      </div>
+      <div class="comic"><img alt="Comic: Meteor Mite and The Gale before and after Release 4.2" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMzYwIiBoZWlnaHQ9IjIwMTYiIHZpZXdCb3g9IjAgMCA2ODAgMTAwOCIgcm9sZT0iaW1nIj4KPHRpdGxlPk1ldGVvciBNaXRlIGFuZCBUaGUgR2FsZTogYSBjb21pYyBpbiBlaWdodCBwYW5lbHM8L3RpdGxlPgo8ZGVzYz5Ud28gaGVyb2VzIHNoYXJlIEVhc3RnYXRlIGFuZCBhIGhhbmRsZXIsIEtpcC4gQmVmb3JlIDEyIEF1Z3VzdCBib3RoIGdldCBhYm91dCAxMiBjYWxscyBhIHdlZWsuIEFmdGVyIHRoZSBhbnN3ZXIgd2luZG93IGRyb3BzIGZyb20gOTAgdG8gNjAgc2Vjb25kcywgTWl0ZSBtaXNzZXMgZm91ciBjYWxscyBpbiBmaXZlIGRheXMsIHRoZW4gZ2V0cyAzLCAyIGFuZCAxIGNhbGxzIGEgd2VlayB3aGlsZSBUaGUgR2FsZSBnZXRzIDE1LCAyMCBhbmQgMTUuIE1pdGUgYXNrcyBLaXAgaWYgc29tZXRoaW5nIGlzIGJyb2tlbi4gS2lwIHNheXMgTWl0ZSB0aGlua3MgTWl0ZSdzIGJlZW4gZm9yZ290dGVuIGFuZCBHYWxlIGlzIGV4aGF1c3RlZC48L2Rlc2M+CjxzdHlsZT4KLnRze2ZvbnQtZmFtaWx5OiJIZWx2ZXRpY2EgTmV1ZSIsSGVsdmV0aWNhLEFyaWFsLHNhbnMtc2VyaWY7Zm9udC1zaXplOjEycHg7Zm9udC13ZWlnaHQ6NDAwfQoudGh7Zm9udC1mYW1pbHk6IkhlbHZldGljYSBOZXVlIixIZWx2ZXRpY2EsQXJpYWwsc2Fucy1zZXJpZjtmb250LXNpemU6MTRweDtmb250LXdlaWdodDo1MDB9Cjwvc3R5bGU+CjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSI2ODAiIGhlaWdodD0iMTAwOCIgZmlsbD0iI0ZGRkZGRiIvPgoKPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjAsMjApIj4KPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjMxMCIgaGVpZ2h0PSIyMzAiIHJ4PSI0IiBmaWxsPSIjRkZGRkZGIiBzdHJva2U9IiMyQzJDMkEiIHN0cm9rZS13aWR0aD0iMiIvPgo8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMzEwIiBoZWlnaHQ9IjQ0IiByeD0iNCIgZmlsbD0iI0ZBRUVEQSIgc3Ryb2tlPSIjMkMyQzJBIiBzdHJva2Utd2lkdGg9IjIiLz4KPHRleHQgY2xhc3M9InRzIiB4PSIxMCIgeT0iMTgiIHN0eWxlPSJmaWxsOiM0MTI0MDIiPkVhc3RnYXRlLiBNZXRlb3IgTWl0ZSBhbmQgVGhlIEdhbGUuPC90ZXh0Pgo8dGV4dCBjbGFzcz0idHMiIHg9IjEwIiB5PSIzNSIgc3R5bGU9ImZpbGw6IzQxMjQwMiI+U2FtZSBzdHJlZXRzLiBTYW1lIGhhbmRsZXIsIEtpcC48L3RleHQ+CjxyZWN0IHg9IjEwIiB5PSIxMTAiIHdpZHRoPSI0NCIgaGVpZ2h0PSI5NSIgZmlsbD0iI0QzRDFDNyIvPgo8cmVjdCB4PSI2MCIgeT0iODAiIHdpZHRoPSIzNCIgaGVpZ2h0PSIxMjUiIGZpbGw9IiNCNEIyQTkiLz4KPHJlY3QgeD0iMjM2IiB5PSI5NiIgd2lkdGg9IjYyIiBoZWlnaHQ9IjEwOSIgZmlsbD0iI0QzRDFDNyIvPgo8cmVjdCB4PSIxOCIgeT0iMTIyIiB3aWR0aD0iOCIgaGVpZ2h0PSIxMCIgZmlsbD0iI0YxRUZFOCIvPjxyZWN0IHg9IjM2IiB5PSIxMjIiIHdpZHRoPSI4IiBoZWlnaHQ9IjEwIiBmaWxsPSIjRjFFRkU4Ii8+PHJlY3QgeD0iMTgiIHk9IjE0NiIgd2lkdGg9IjgiIGhlaWdodD0iMTAiIGZpbGw9IiNGMUVGRTgiLz48cmVjdCB4PSIzNiIgeT0iMTQ2IiB3aWR0aD0iOCIgaGVpZ2h0PSIxMCIgZmlsbD0iI0YxRUZFOCIvPgo8cmVjdCB4PSI2OCIgeT0iOTIiIHdpZHRoPSI3IiBoZWlnaHQ9IjkiIGZpbGw9IiNGMUVGRTgiLz48cmVjdCB4PSI4MCIgeT0iOTIiIHdpZHRoPSI3IiBoZWlnaHQ9IjkiIGZpbGw9IiNGMUVGRTgiLz48cmVjdCB4PSI2OCIgeT0iMTE0IiB3aWR0aD0iNyIgaGVpZ2h0PSI5IiBmaWxsPSIjRjFFRkU4Ii8+PHJlY3QgeD0iODAiIHk9IjExNCIgd2lkdGg9IjciIGhlaWdodD0iOSIgZmlsbD0iI0YxRUZFOCIvPgo8cmVjdCB4PSIyNDYiIHk9IjEwOCIgd2lkdGg9IjkiIGhlaWdodD0iMTAiIGZpbGw9IiNGMUVGRTgiLz48cmVjdCB4PSIyNjMiIHk9IjEwOCIgd2lkdGg9IjkiIGhlaWdodD0iMTAiIGZpbGw9IiNGMUVGRTgiLz48cmVjdCB4PSIyODAiIHk9IjEwOCIgd2lkdGg9IjkiIGhlaWdodD0iMTAiIGZpbGw9IiNGMUVGRTgiLz4KPHJlY3QgeD0iMjQ0IiB5PSI2MCIgd2lkdGg9IjU4IiBoZWlnaHQ9IjIyIiByeD0iMyIgZmlsbD0iIzVGNUU1QSIvPgo8dGV4dCBjbGFzcz0idHMiIHg9IjI1MCIgeT0iNzYiIHN0eWxlPSJmaWxsOiNGMUVGRTgiPkVhc3RnYXRlPC90ZXh0Pgo8cmVjdCB4PSIyNzEiIHk9IjgyIiB3aWR0aD0iNCIgaGVpZ2h0PSIxNCIgZmlsbD0iIzVGNUU1QSIvPgo8cmVjdCB4PSIwIiB5PSIyMDUiIHdpZHRoPSIzMTAiIGhlaWdodD0iMjUiIGZpbGw9IiNCNEIyQTkiLz4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTMwLDIwNSkiPgo8cGF0aCBkPSJNOCwtNDYgUTI0LC01OCA0MCwtNTIgUTI2LC01MCAxNCwtNDAgWiIgZmlsbD0iI0ZBQzc3NSIvPgo8cmVjdCB4PSItMTAiIHk9Ii0xOCIgd2lkdGg9IjgiIGhlaWdodD0iMTgiIGZpbGw9IiMwQzQ0N0MiLz48cmVjdCB4PSIyIiB5PSItMTgiIHdpZHRoPSI4IiBoZWlnaHQ9IjE4IiBmaWxsPSIjMEM0NDdDIi8+CjxyZWN0IHg9Ii0xNCIgeT0iLTQ0IiB3aWR0aD0iMjgiIGhlaWdodD0iMzAiIHJ4PSI4IiBmaWxsPSIjMkE3OEQ2Ii8+CjxjaXJjbGUgY3g9IjAiIGN5PSItMzIiIHI9IjUiIGZpbGw9IiNGQUM3NzUiLz4KPGNpcmNsZSBjeD0iMCIgY3k9Ii01NiIgcj0iMTIiIGZpbGw9IiNGNUM0QjMiLz4KPHJlY3QgeD0iLTEyIiB5PSItNjAiIHdpZHRoPSIyNCIgaGVpZ2h0PSI2IiByeD0iMyIgZmlsbD0iIzBDNDQ3QyIvPgo8L2c+CjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE5MiwyMDUpIj4KPHBhdGggZD0iTS0xNiwtNjIgTC0zMCwtNiBMMTYsLTYyIFoiIGZpbGw9IiMwODUwNDEiLz4KPHJlY3QgeD0iLTEyIiB5PSItMjIiIHdpZHRoPSIxMCIgaGVpZ2h0PSIyMiIgZmlsbD0iIzA4NTA0MSIvPjxyZWN0IHg9IjIiIHk9Ii0yMiIgd2lkdGg9IjEwIiBoZWlnaHQ9IjIyIiBmaWxsPSIjMDg1MDQxIi8+CjxyZWN0IHg9Ii0xNiIgeT0iLTYyIiB3aWR0aD0iMzIiIGhlaWdodD0iNDIiIHJ4PSI4IiBmaWxsPSIjMUQ5RTc1Ii8+CjxwYXRoIGQ9Ik0tOCwtNDQgcTgsLTggMTYsMCIgc3Ryb2tlPSIjRTFGNUVFIiBzdHJva2Utd2lkdGg9IjMiIGZpbGw9Im5vbmUiLz4KPGNpcmNsZSBjeD0iMCIgY3k9Ii03NCIgcj0iMTIiIGZpbGw9IiNFOEM0QTgiLz4KPHJlY3QgeD0iLTEyIiB5PSItNzgiIHdpZHRoPSIyNCIgaGVpZ2h0PSI2IiByeD0iMyIgZmlsbD0iIzA0MzQyQyIvPgo8L2c+CjwvZz4KCjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM1MCwyMCkiPgo8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMzEwIiBoZWlnaHQ9IjIzMCIgcng9IjQiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iIzJDMkMyQSIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIzMTAiIGhlaWdodD0iNDQiIHJ4PSI0IiBmaWxsPSIjRkFFRURBIiBzdHJva2U9IiMyQzJDMkEiIHN0cm9rZS13aWR0aD0iMiIvPgo8dGV4dCBjbGFzcz0idHMiIHg9IjEwIiB5PSIxOCIgc3R5bGU9ImZpbGw6IzQxMjQwMiI+QmVmb3JlIDEyIEF1Z3VzdDogYWJvdXQgMTIgY2FsbHM8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJ0cyIgeD0iMTAiIHk9IjM1IiBzdHlsZT0iZmlsbDojNDEyNDAyIj5hIHdlZWsgZWFjaC4gTWl0ZSBzYXlzIHllcyB0byBtb3N0LjwvdGV4dD4KPHJlY3QgeD0iMjAiIHk9IjU4IiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjI4IiByeD0iMTIiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iIzJDMkMyQSIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KPHBhdGggZD0iTTYyLDg2IEw3MCw5OCBMNzYsODYiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iIzJDMkMyQSIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KPHRleHQgY2xhc3M9InRzIiB4PSIzNCIgeT0iNzciIHN0eWxlPSJmaWxsOiMyQzJDMkEiPk9uIG15IHdheSE8L3RleHQ+CjxyZWN0IHg9IjE4NiIgeT0iNTgiIHdpZHRoPSI5NiIgaGVpZ2h0PSIyOCIgcng9IjEyIiBmaWxsPSIjRkZGRkZGIiBzdHJva2U9IiMyQzJDMkEiIHN0cm9rZS13aWR0aD0iMS41Ii8+CjxwYXRoIGQ9Ik0yMjYsODYgTDIzMiw5OCBMMjQwLDg2IiBmaWxsPSIjRkZGRkZGIiBzdHJva2U9IiMyQzJDMkEiIHN0cm9rZS13aWR0aD0iMS41Ii8+Cjx0ZXh0IGNsYXNzPSJ0cyIgeD0iMjEwIiB5PSI3NyIgc3R5bGU9ImZpbGw6IzJDMkMyQSI+R290IGl0ITwvdGV4dD4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNzAsMjAwKSI+CjxwYXRoIGQ9Ik04LC00NiBRMjQsLTU4IDQwLC01MiBRMjYsLTUwIDE0LC00MCBaIiBmaWxsPSIjRkFDNzc1Ii8+CjxyZWN0IHg9Ii0xMCIgeT0iLTE4IiB3aWR0aD0iOCIgaGVpZ2h0PSIxOCIgZmlsbD0iIzBDNDQ3QyIvPjxyZWN0IHg9IjIiIHk9Ii0xOCIgd2lkdGg9IjgiIGhlaWdodD0iMTgiIGZpbGw9IiMwQzQ0N0MiLz4KPHJlY3QgeD0iLTE0IiB5PSItNDQiIHdpZHRoPSIyOCIgaGVpZ2h0PSIzMCIgcng9IjgiIGZpbGw9IiMyQTc4RDYiLz4KPGNpcmNsZSBjeD0iMCIgY3k9Ii0zMiIgcj0iNSIgZmlsbD0iI0ZBQzc3NSIvPgo8Y2lyY2xlIGN4PSIwIiBjeT0iLTU2IiByPSIxMiIgZmlsbD0iI0Y1QzRCMyIvPgo8cmVjdCB4PSItMTIiIHk9Ii02MCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjYiIHJ4PSIzIiBmaWxsPSIjMEM0NDdDIi8+CjxyZWN0IHg9IjE0IiB5PSItNDAiIHdpZHRoPSIxNCIgaGVpZ2h0PSIyMiIgcng9IjMiIGZpbGw9IiMyQzJDMkEiLz48cmVjdCB4PSIxNiIgeT0iLTM3IiB3aWR0aD0iMTAiIGhlaWdodD0iMTQiIGZpbGw9IiNCNUQ0RjQiLz4KPC9nPgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyMzQsMjAwKSI+CjxwYXRoIGQ9Ik0tMTYsLTYyIEwtMzAsLTYgTDE2LC02MiBaIiBmaWxsPSIjMDg1MDQxIi8+CjxyZWN0IHg9Ii0xMiIgeT0iLTIyIiB3aWR0aD0iMTAiIGhlaWdodD0iMjIiIGZpbGw9IiMwODUwNDEiLz48cmVjdCB4PSIyIiB5PSItMjIiIHdpZHRoPSIxMCIgaGVpZ2h0PSIyMiIgZmlsbD0iIzA4NTA0MSIvPgo8cmVjdCB4PSItMTYiIHk9Ii02MiIgd2lkdGg9IjMyIiBoZWlnaHQ9IjQyIiByeD0iOCIgZmlsbD0iIzFEOUU3NSIvPgo8cGF0aCBkPSJNLTgsLTQ0IHE4LC04IDE2LDAiIHN0cm9rZT0iI0UxRjVFRSIgc3Ryb2tlLXdpZHRoPSIzIiBmaWxsPSJub25lIi8+CjxjaXJjbGUgY3g9IjAiIGN5PSItNzQiIHI9IjEyIiBmaWxsPSIjRThDNEE4Ii8+CjxyZWN0IHg9Ii0xMiIgeT0iLTc4IiB3aWR0aD0iMjQiIGhlaWdodD0iNiIgcng9IjMiIGZpbGw9IiMwNDM0MkMiLz4KPHJlY3QgeD0iLTMyIiB5PSItNTgiIHdpZHRoPSIxNCIgaGVpZ2h0PSIyMiIgcng9IjMiIGZpbGw9IiMyQzJDMkEiLz48cmVjdCB4PSItMzAiIHk9Ii01NSIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0IiBmaWxsPSIjQjVENEY0Ii8+CjwvZz4KPHRleHQgY2xhc3M9InRzIiB4PSIzMCIgeT0iMjIyIiBzdHlsZT0iZmlsbDojMEM0NDdDIj5NaXRlOiB+MTIgYSB3ZWVrPC90ZXh0Pgo8dGV4dCBjbGFzcz0idHMiIHg9IjE5MCIgeT0iMjIyIiBzdHlsZT0iZmlsbDojMDg1MDQxIj5HYWxlOiB+MTIgYSB3ZWVrPC90ZXh0Pgo8L2c+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyMCwyNjYpIj4KPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjMxMCIgaGVpZ2h0PSIyMzAiIHJ4PSI0IiBmaWxsPSIjRkZGRkZGIiBzdHJva2U9IiMyQzJDMkEiIHN0cm9rZS13aWR0aD0iMiIvPgo8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMzEwIiBoZWlnaHQ9IjQ0IiByeD0iNCIgZmlsbD0iI0ZBRUVEQSIgc3Ryb2tlPSIjMkMyQzJBIiBzdHJva2Utd2lkdGg9IjIiLz4KPHRleHQgY2xhc3M9InRzIiB4PSIxMCIgeT0iMTgiIHN0eWxlPSJmaWxsOiM0MTI0MDIiPjEyIEF1Z3VzdC4gQSBjYWxsIG5vdyB3YWl0cyBvbmUgbWludXRlLDwvdGV4dD4KPHRleHQgY2xhc3M9InRzIiB4PSIxMCIgeT0iMzUiIHN0eWxlPSJmaWxsOiM0MTI0MDIiPm5vdCBhIG1pbnV0ZSBhbmQgYSBoYWxmLjwvdGV4dD4KPGNpcmNsZSBjeD0iMTU1IiBjeT0iMTI4IiByPSI2MiIgZmlsbD0iI0YxRUZFOCIgc3Ryb2tlPSIjMkMyQzJBIiBzdHJva2Utd2lkdGg9IjMiLz4KPHBhdGggZD0iTTE1NSwxMjggTDE1NSw2OCBBNjAsNjAgMCAxLDEgMTAzLjA0LDE1OCBaIiBmaWxsPSIjRjA5NTk1Ii8+CjxwYXRoIGQ9Ik0xNTUsMTI4IEwxMDMuMDQsMTU4IEE2MCw2MCAwIDAsMSAxNTUsNjggWiIgZmlsbD0iI0QzRDFDNyIvPgo8bGluZSB4MT0iMTU1IiB5MT0iMTI4IiB4Mj0iMTU1IiB5Mj0iNzYiIHN0cm9rZT0iIzJDMkMyQSIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPGxpbmUgeDE9IjE1NSIgeTE9IjEyOCIgeDI9IjEwOCIgeTI9IjE1NSIgc3Ryb2tlPSIjMkMyQzJBIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8Y2lyY2xlIGN4PSIxNTUiIGN5PSIxMjgiIHI9IjUiIGZpbGw9IiMyQzJDMkEiLz4KPHRleHQgY2xhc3M9InRzIiB4PSIyMiIgeT0iMjE0IiBzdHlsZT0iZmlsbDojNUY1RTVBIj5XYXM6IDkwIHNlY29uZHM8L3RleHQ+CjxsaW5lIHgxPSIyMCIgeTE9IjIxMCIgeDI9IjEyMiIgeTI9IjIxMCIgc3Ryb2tlPSIjQTMyRDJEIiBzdHJva2Utd2lkdGg9IjIiLz4KPHRleHQgY2xhc3M9InRoIiB4PSIxNzYiIHk9IjIxNCIgc3R5bGU9ImZpbGw6I0EzMkQyRCI+Tm93OiA2MCBzZWNvbmRzPC90ZXh0Pgo8L2c+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzNTAsMjY2KSI+CjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIzMTAiIGhlaWdodD0iMjMwIiByeD0iNCIgZmlsbD0iI0ZGRkZGRiIgc3Ryb2tlPSIjMkMyQzJBIiBzdHJva2Utd2lkdGg9IjIiLz4KPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjMxMCIgaGVpZ2h0PSI0NCIgcng9IjQiIGZpbGw9IiNGQUVFREEiIHN0cm9rZT0iIzJDMkMyQSIgc3Ryb2tlLXdpZHRoPSIyIi8+Cjx0ZXh0IGNsYXNzPSJ0cyIgeD0iMTAiIHk9IjE4IiBzdHlsZT0iZmlsbDojNDEyNDAyIj5UaGF0IHdlZWsgTWl0ZSBtaXNzZXMgZm91ciBjYWxscyBpbiBmaXZlPC90ZXh0Pgo8dGV4dCBjbGFzcz0idHMiIHg9IjEwIiB5PSIzNSIgc3R5bGU9ImZpbGw6IzQxMjQwMiI+ZGF5cy4gTW9yZSB0aGFuIGluIGFsbCBvZiBKdWx5LjwvdGV4dD4KPHJlY3QgeD0iMTAiIHk9IjgwIiB3aWR0aD0iNDAiIGhlaWdodD0iMTUiIGZpbGw9IiNEM0QxQzciLz48cmVjdCB4PSIxMCIgeT0iOTUiIHdpZHRoPSI3MCIgaGVpZ2h0PSIxNSIgZmlsbD0iI0QzRDFDNyIvPjxyZWN0IHg9IjEwIiB5PSIxMTAiIHdpZHRoPSIxMDAiIGhlaWdodD0iMTUiIGZpbGw9IiNEM0QxQzciLz48cmVjdCB4PSIxMCIgeT0iMTI1IiB3aWR0aD0iMTMwIiBoZWlnaHQ9IjE1IiBmaWxsPSIjRDNEMUM3Ii8+PHJlY3QgeD0iMTAiIHk9IjE0MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSIxNSIgZmlsbD0iI0QzRDFDNyIvPjxyZWN0IHg9IjEwIiB5PSIxNTUiIHdpZHRoPSIxOTAiIGhlaWdodD0iNTAiIGZpbGw9IiNEM0QxQzciLz4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTEwLDEyNCkgcm90YXRlKDE4KSI+CjxwYXRoIGQ9Ik04LC00NiBRMjQsLTU4IDQwLC01MiBRMjYsLTUwIDE0LC00MCBaIiBmaWxsPSIjRkFDNzc1Ii8+CjxyZWN0IHg9Ii0xMiIgeT0iLTE4IiB3aWR0aD0iOCIgaGVpZ2h0PSIxOCIgZmlsbD0iIzBDNDQ3QyIgdHJhbnNmb3JtPSJyb3RhdGUoLTI1IC04IC0xOCkiLz48cmVjdCB4PSI0IiB5PSItMTgiIHdpZHRoPSI4IiBoZWlnaHQ9IjE4IiBmaWxsPSIjMEM0NDdDIiB0cmFuc2Zvcm09InJvdGF0ZSgyNSA4IC0xOCkiLz4KPHJlY3QgeD0iLTE0IiB5PSItNDQiIHdpZHRoPSIyOCIgaGVpZ2h0PSIzMCIgcng9IjgiIGZpbGw9IiMyQTc4RDYiLz4KPGNpcmNsZSBjeD0iMCIgY3k9Ii0zMiIgcj0iNSIgZmlsbD0iI0ZBQzc3NSIvPgo8Y2lyY2xlIGN4PSIwIiBjeT0iLTU2IiByPSIxMiIgZmlsbD0iI0Y1QzRCMyIvPgo8cmVjdCB4PSItMTIiIHk9Ii02MCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjYiIHJ4PSIzIiBmaWxsPSIjMEM0NDdDIi8+CjwvZz4KPHBhdGggZD0iTTYwLDkwIEw4MCw5MiBNNTgsMTAwIEw3NiwxMDIiIHN0cm9rZT0iIzg4ODc4MCIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+CjxyZWN0IHg9IjIxNCIgeT0iMTg2IiB3aWR0aD0iODYiIGhlaWdodD0iOCIgZmlsbD0iIzg1NEYwQiIvPjxyZWN0IHg9IjIyMCIgeT0iMTk0IiB3aWR0aD0iNiIgaGVpZ2h0PSIxMSIgZmlsbD0iIzg1NEYwQiIvPjxyZWN0IHg9IjI4OCIgeT0iMTk0IiB3aWR0aD0iNiIgaGVpZ2h0PSIxMSIgZmlsbD0iIzg1NEYwQiIvPgo8cmVjdCB4PSIyMzciIHk9IjEyNCIgd2lkdGg9IjQyIiBoZWlnaHQ9IjYwIiByeD0iNiIgZmlsbD0iIzJDMkMyQSIvPgo8cmVjdCB4PSIyNDEiIHk9IjEzMCIgd2lkdGg9IjM0IiBoZWlnaHQ9IjQ0IiBmaWxsPSIjRkNFQkVCIi8+Cjx0ZXh0IGNsYXNzPSJ0cyIgeD0iMjQ0IiB5PSIxNTciIHN0eWxlPSJmaWxsOiNBMzJEMkQiPkdvbmU8L3RleHQ+CjxjaXJjbGUgY3g9IjI3NiIgY3k9Ijc4IiByPSIxOCIgZmlsbD0iI0UyNEI0QSIvPgo8dGV4dCBjbGFzcz0idGgiIHg9IjI2NSIgeT0iODMiIHN0eWxlPSJmaWxsOiNGRkZGRkYiPng0PC90ZXh0Pgo8cmVjdCB4PSIwIiB5PSIyMDUiIHdpZHRoPSIzMTAiIGhlaWdodD0iMjUiIGZpbGw9IiNCNEIyQTkiLz4KPC9nPgoKPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjAsNTEyKSI+CjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIzMTAiIGhlaWdodD0iMjMwIiByeD0iNCIgZmlsbD0iI0ZGRkZGRiIgc3Ryb2tlPSIjMkMyQzJBIiBzdHJva2Utd2lkdGg9IjIiLz4KPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjMxMCIgaGVpZ2h0PSI0NCIgcng9IjQiIGZpbGw9IiNGQUVFREEiIHN0cm9rZT0iIzJDMkMyQSIgc3Ryb2tlLXdpZHRoPSIyIi8+Cjx0ZXh0IGNsYXNzPSJ0cyIgeD0iMTAiIHk9IjE4IiBzdHlsZT0iZmlsbDojNDEyNDAyIj5Ob2JvZHkgdG9sZCBNaXRlIGEgbWlzc2VkIGNhbGw8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJ0cyIgeD0iMTAiIHk9IjM1IiBzdHlsZT0iZmlsbDojNDEyNDAyIj5jb3VudHMgYXMgYSBuby48L3RleHQ+CjxyZWN0IHg9IjE0IiB5PSI1OCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMzIiIHJ4PSI0IiBmaWxsPSIjMkMyQzJBIiBzdHJva2U9IiM4NTRGMEIiIHN0cm9rZS13aWR0aD0iNSIvPgo8dGV4dCBjbGFzcz0idHMiIHg9IjI4IiB5PSI5MCIgc3R5bGU9ImZpbGw6I0MwREQ5NyI+WWVzOiBjb3VudHMgZm9yIHlvdTwvdGV4dD4KPHRleHQgY2xhc3M9InRzIiB4PSIyOCIgeT0iMTIwIiBzdHlsZT0iZmlsbDojRjFFRkU4Ij5ObzogY291bnRzIGFnYWluc3Q8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJ0cyIgeD0iMjgiIHk9IjE1MCIgc3R5bGU9ImZpbGw6I0ZBQzc3NSI+TWlzc2VkOiBjb3VudHMgYWdhaW5zdDwvdGV4dD4KPHRleHQgY2xhc3M9InRzIiB4PSIyOCIgeT0iMTY4IiBzdHlsZT0iZmlsbDojRkFDNzc1Ij50b288L3RleHQ+CjxsaW5lIHgxPSIyNiIgeTE9IjE3NCIgeDI9IjE5MCIgeTI9IjE3NCIgc3Ryb2tlPSIjRkFDNzc1IiBzdHJva2Utd2lkdGg9IjEuNSIvPgo8cmVjdCB4PSIwIiB5PSIyMDUiIHdpZHRoPSIzMTAiIGhlaWdodD0iMjUiIGZpbGw9IiNCNEIyQTkiLz4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjYwLDIwNSkiPgo8cGF0aCBkPSJNOCwtNDYgUTI0LC01OCA0MCwtNTIgUTI2LC01MCAxNCwtNDAgWiIgZmlsbD0iI0ZBQzc3NSIvPgo8cmVjdCB4PSItMTAiIHk9Ii0xOCIgd2lkdGg9IjgiIGhlaWdodD0iMTgiIGZpbGw9IiMwQzQ0N0MiLz48cmVjdCB4PSIyIiB5PSItMTgiIHdpZHRoPSI4IiBoZWlnaHQ9IjE4IiBmaWxsPSIjMEM0NDdDIi8+CjxyZWN0IHg9Ii0xNCIgeT0iLTQ0IiB3aWR0aD0iMjgiIGhlaWdodD0iMzAiIHJ4PSI4IiBmaWxsPSIjMkE3OEQ2Ii8+CjxjaXJjbGUgY3g9IjAiIGN5PSItMzIiIHI9IjUiIGZpbGw9IiNGQUM3NzUiLz4KPGNpcmNsZSBjeD0iMCIgY3k9Ii01NiIgcj0iMTIiIGZpbGw9IiNGNUM0QjMiLz4KPHJlY3QgeD0iLTEyIiB5PSItNjAiIHdpZHRoPSIyNCIgaGVpZ2h0PSI2IiByeD0iMyIgZmlsbD0iIzBDNDQ3QyIvPgo8L2c+CjxyZWN0IHg9IjIzNCIgeT0iNjIiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcng9IjE0IiBmaWxsPSIjRkZGRkZGIiBzdHJva2U9IiMyQzJDMkEiIHN0cm9rZS13aWR0aD0iMS41Ii8+CjxwYXRoIGQ9Ik0yNDgsMTAyIEwyNTQsMTE0IEwyNjAsMTAyIiBmaWxsPSIjRkZGRkZGIiBzdHJva2U9IiMyQzJDMkEiIHN0cm9rZS13aWR0aD0iMS41Ii8+Cjx0ZXh0IGNsYXNzPSJ0aCIgeD0iMjUwIiB5PSI4OCIgc3R5bGU9ImZpbGw6IzJDMkMyQSI+PzwvdGV4dD4KPC9nPgoKPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzUwLDUxMikiPgo8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMzEwIiBoZWlnaHQ9IjIzMCIgcng9IjQiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iIzJDMkMyQSIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIzMTAiIGhlaWdodD0iNDQiIHJ4PSI0IiBmaWxsPSIjRkFFRURBIiBzdHJva2U9IiMyQzJDMkEiIHN0cm9rZS13aWR0aD0iMiIvPgo8dGV4dCBjbGFzcz0idHMiIHg9IjEwIiB5PSIxOCIgc3R5bGU9ImZpbGw6IzQxMjQwMiI+Q2FsbHMgYSB3ZWVrLiBNaXRlOiAzLCB0aGVuIDIsIHRoZW4gMS48L3RleHQ+Cjx0ZXh0IGNsYXNzPSJ0cyIgeD0iMTAiIHk9IjM1IiBzdHlsZT0iZmlsbDojNDEyNDAyIj5UaGUgR2FsZTogMTUsIHRoZW4gMjAsIHRoZW4gMTUuPC90ZXh0Pgo8dGV4dCBjbGFzcz0idGgiIHg9IjEyIiB5PSIxMTIiIHN0eWxlPSJmaWxsOiMwQzQ0N0MiPk1pdGU8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJ0aCIgeD0iMTIiIHk9IjE5MCIgc3R5bGU9ImZpbGw6IzA4NTA0MSI+R2FsZTwvdGV4dD4KPGxpbmUgeDE9IjgwIiB5MT0iMTI1IiB4Mj0iMjkwIiB5Mj0iMTI1IiBzdHJva2U9IiNCNEIyQTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CjxsaW5lIHgxPSI4MCIgeTE9IjIwMCIgeDI9IjI5MCIgeTI9IjIwMCIgc3Ryb2tlPSIjQjRCMkE5IiBzdHJva2Utd2lkdGg9IjEuNSIvPgo8cmVjdCB4PSI5MCIgeT0iODkiIHdpZHRoPSIzMCIgaGVpZ2h0PSIzNiIgcng9IjMiIGZpbGw9IiM4NUI3RUIiLz48cmVjdCB4PSIxNDAiIHk9IjExNiIgd2lkdGg9IjMwIiBoZWlnaHQ9IjkiIHJ4PSIzIiBmaWxsPSIjMkE3OEQ2Ii8+PHJlY3QgeD0iMTkwIiB5PSIxMTkiIHdpZHRoPSIzMCIgaGVpZ2h0PSI2IiByeD0iMyIgZmlsbD0iIzJBNzhENiIvPjxyZWN0IHg9IjI0MCIgeT0iMTIyIiB3aWR0aD0iMzAiIGhlaWdodD0iMyIgcng9IjEiIGZpbGw9IiMyQTc4RDYiLz4KPHRleHQgY2xhc3M9InRzIiB4PSI5OCIgeT0iODQiIHN0eWxlPSJmaWxsOiMwQzQ0N0MiPjEyPC90ZXh0Pjx0ZXh0IGNsYXNzPSJ0cyIgeD0iMTUxIiB5PSIxMTEiIHN0eWxlPSJmaWxsOiMwQzQ0N0MiPjM8L3RleHQ+PHRleHQgY2xhc3M9InRzIiB4PSIyMDEiIHk9IjExNCIgc3R5bGU9ImZpbGw6IzBDNDQ3QyI+MjwvdGV4dD48dGV4dCBjbGFzcz0idHMiIHg9IjI1MSIgeT0iMTE3IiBzdHlsZT0iZmlsbDojMEM0NDdDIj4xPC90ZXh0Pgo8cmVjdCB4PSI5MCIgeT0iMTY0IiB3aWR0aD0iMzAiIGhlaWdodD0iMzYiIHJ4PSIzIiBmaWxsPSIjOUZFMUNCIi8+PHJlY3QgeD0iMTQwIiB5PSIxNTUiIHdpZHRoPSIzMCIgaGVpZ2h0PSI0NSIgcng9IjMiIGZpbGw9IiMxRDlFNzUiLz48cmVjdCB4PSIxOTAiIHk9IjE0MCIgd2lkdGg9IjMwIiBoZWlnaHQ9IjYwIiByeD0iMyIgZmlsbD0iIzFEOUU3NSIvPjxyZWN0IHg9IjI0MCIgeT0iMTU1IiB3aWR0aD0iMzAiIGhlaWdodD0iNDUiIHJ4PSIzIiBmaWxsPSIjMUQ5RTc1Ii8+Cjx0ZXh0IGNsYXNzPSJ0cyIgeD0iOTgiIHk9IjE1OSIgc3R5bGU9ImZpbGw6IzA4NTA0MSI+MTI8L3RleHQ+PHRleHQgY2xhc3M9InRzIiB4PSIxNDgiIHk9IjE1MCIgc3R5bGU9ImZpbGw6IzA4NTA0MSI+MTU8L3RleHQ+PHRleHQgY2xhc3M9InRzIiB4PSIxOTgiIHk9IjEzNSIgc3R5bGU9ImZpbGw6IzA4NTA0MSI+MjA8L3RleHQ+PHRleHQgY2xhc3M9InRzIiB4PSIyNDgiIHk9IjE1MCIgc3R5bGU9ImZpbGw6IzA4NTA0MSI+MTU8L3RleHQ+Cjx0ZXh0IGNsYXNzPSJ0cyIgeD0iOTIiIHk9IjIxOCIgc3R5bGU9ImZpbGw6IzVGNUU1QSI+SnVseTwvdGV4dD48dGV4dCBjbGFzcz0idHMiIHg9IjEzNiIgeT0iMjE4IiBzdHlsZT0iZmlsbDojNUY1RTVBIj4xOSBBdWc8L3RleHQ+PHRleHQgY2xhc3M9InRzIiB4PSIxODYiIHk9IjIxOCIgc3R5bGU9ImZpbGw6IzVGNUU1QSI+MjYgQXVnPC90ZXh0Pjx0ZXh0IGNsYXNzPSJ0cyIgeD0iMjQwIiB5PSIyMTgiIHN0eWxlPSJmaWxsOiM1RjVFNUEiPjIgU2VwPC90ZXh0Pgo8L2c+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyMCw3NTgpIj4KPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjMxMCIgaGVpZ2h0PSIyMzAiIHJ4PSI0IiBmaWxsPSIjRkZGRkZGIiBzdHJva2U9IiMyQzJDMkEiIHN0cm9rZS13aWR0aD0iMiIvPgo8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMzEwIiBoZWlnaHQ9IjQ0IiByeD0iNCIgZmlsbD0iI0ZBRUVEQSIgc3Ryb2tlPSIjMkMyQzJBIiBzdHJva2Utd2lkdGg9IjIiLz4KPHRleHQgY2xhc3M9InRzIiB4PSIxMCIgeT0iMTgiIHN0eWxlPSJmaWxsOiM0MTI0MDIiPk1pdGUgdGV4dHMgS2lwOiBpcyBzb21ldGhpbmcgYnJva2VuPzwvdGV4dD4KPHRleHQgY2xhc3M9InRzIiB4PSIxMCIgeT0iMzUiIHN0eWxlPSJmaWxsOiM0MTI0MDIiPktpcCBoYXMgbm8gYW5zd2VyLiBOZWl0aGVyIGRpZCB3ZS48L3RleHQ+CjxyZWN0IHg9IjE0MCIgeT0iNTIiIHdpZHRoPSIxNjAiIGhlaWdodD0iMjYiIHJ4PSIxMCIgZmlsbD0iI0U2RjFGQiIgc3Ryb2tlPSIjMkMyQzJBIiBzdHJva2Utd2lkdGg9IjEuNSIvPgo8dGV4dCBjbGFzcz0idHMiIHg9IjE1MiIgeT0iNzAiIHN0eWxlPSJmaWxsOiMwQzQ0N0MiPmlzIHNvbWV0aGluZyBicm9rZW4/PC90ZXh0Pgo8cmVjdCB4PSIzMCIgeT0iODgiIHdpZHRoPSIxMTAiIGhlaWdodD0iNzIiIHJ4PSI0IiBmaWxsPSIjMkMyQzJBIi8+PHJlY3QgeD0iMzYiIHk9Ijk0IiB3aWR0aD0iOTgiIGhlaWdodD0iNjAiIGZpbGw9IiNGMUVGRTgiLz4KPHRleHQgY2xhc3M9InRzIiB4PSI0NCIgeT0iMTEwIiBzdHlsZT0iZmlsbDojMEM0NDdDIj5NaXRlPC90ZXh0Pgo8bGluZSB4MT0iNDQiIHkxPSIxMzQiIHgyPSIxMjYiIHkyPSIxMzQiIHN0cm9rZT0iIzJBNzhENiIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxyZWN0IHg9IjE3MCIgeT0iODgiIHdpZHRoPSIxMTAiIGhlaWdodD0iNzIiIHJ4PSI0IiBmaWxsPSIjMkMyQzJBIi8+PHJlY3QgeD0iMTc2IiB5PSI5NCIgd2lkdGg9Ijk4IiBoZWlnaHQ9IjYwIiBmaWxsPSIjRjFFRkU4Ii8+Cjx0ZXh0IGNsYXNzPSJ0cyIgeD0iMTg0IiB5PSIxMTAiIHN0eWxlPSJmaWxsOiMwODUwNDEiPkdhbGU8L3RleHQ+Cjxwb2x5bGluZSBwb2ludHM9IjE4NCwxNDYgMTk0LDEyMiAyMDQsMTQyIDIxNCwxMTggMjI0LDE0NCAyMzQsMTE2IDI0NCwxNDAgMjU0LDEyMCAyNjYsMTM4IiBzdHJva2U9IiNFMjRCNEEiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0ibm9uZSIvPgo8cmVjdCB4PSIxNDgiIHk9IjE2MCIgd2lkdGg9IjE0IiBoZWlnaHQ9IjE0IiBmaWxsPSIjNUY1RTVBIi8+CjxyZWN0IHg9IjEwIiB5PSIxOTAiIHdpZHRoPSIyOTAiIGhlaWdodD0iMTAiIGZpbGw9IiM4NTRGMEIiLz4KPGNpcmNsZSBjeD0iMTU1IiBjeT0iMTc2IiByPSIxNSIgZmlsbD0iI0U4QzRBOCIvPgo8cGF0aCBkPSJNMTM5LDE3NCBBMTYsMTYgMCAwLDEgMTcxLDE3NCIgc3Ryb2tlPSIjMkMyQzJBIiBzdHJva2Utd2lkdGg9IjMiIGZpbGw9Im5vbmUiLz4KPHJlY3QgeD0iMTM1IiB5PSIxNzAiIHdpZHRoPSI2IiBoZWlnaHQ9IjEwIiByeD0iMiIgZmlsbD0iIzJDMkMyQSIvPjxyZWN0IHg9IjE2OSIgeT0iMTcwIiB3aWR0aD0iNiIgaGVpZ2h0PSIxMCIgcng9IjIiIGZpbGw9IiMyQzJDMkEiLz4KPHRleHQgY2xhc3M9InRzIiB4PSIxNDAiIHk9IjIyMCIgc3R5bGU9ImZpbGw6IzVGNUU1QSI+S2lwPC90ZXh0Pgo8L2c+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzNTAsNzU4KSI+CjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIzMTAiIGhlaWdodD0iMjMwIiByeD0iNCIgZmlsbD0iIzI2MjE1QyIgc3Ryb2tlPSIjMkMyQzJBIiBzdHJva2Utd2lkdGg9IjIiLz4KPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjMxMCIgaGVpZ2h0PSI0NCIgcng9IjQiIGZpbGw9IiNGQUVFREEiIHN0cm9rZT0iIzJDMkMyQSIgc3Ryb2tlLXdpZHRoPSIyIi8+Cjx0ZXh0IGNsYXNzPSJ0cyIgeD0iMTAiIHk9IjE4IiBzdHlsZT0iZmlsbDojNDEyNDAyIj4iTWl0ZSB0aGlua3MgTWl0ZSdzIGJlZW4gZm9yZ290dGVuLjwvdGV4dD4KPHRleHQgY2xhc3M9InRzIiB4PSIxMCIgeT0iMzUiIHN0eWxlPSJmaWxsOiM0MTI0MDIiPkdhbGUncyBleGhhdXN0ZWQuIiAoS2lwKTwvdGV4dD4KPGNpcmNsZSBjeD0iNDAiIGN5PSI3MCIgcj0iMiIgZmlsbD0iI0ZBQzc3NSIvPjxjaXJjbGUgY3g9Ijk2IiBjeT0iNjAiIHI9IjEuNSIgZmlsbD0iI0ZBQzc3NSIvPjxjaXJjbGUgY3g9IjE1MCIgY3k9IjgwIiByPSIyIiBmaWxsPSIjRkFDNzc1Ii8+PGNpcmNsZSBjeD0iNTgiIGN5PSIxMTIiIHI9IjEuNSIgZmlsbD0iI0ZBQzc3NSIvPjxjaXJjbGUgY3g9IjEyOCIgY3k9IjEwNCIgcj0iMS41IiBmaWxsPSIjRkFDNzc1Ii8+CjxjaXJjbGUgY3g9IjI4MCIgY3k9IjcwIiByPSIxNCIgZmlsbD0iI0YxRUZFOCIvPjxjaXJjbGUgY3g9IjI4NiIgY3k9IjY2IiByPSIxMiIgZmlsbD0iIzI2MjE1QyIvPgo8cGF0aCBkPSJNMTMwLDEyOCBMMTcwLDEyOCBNMTIwLDE0MCBMMTYyLDE0MCBNMTM0LDE1MiBMMTY4LDE1MiIgc3Ryb2tlPSIjNURDQUE1IiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiLz4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTg0LDE0MCkgcm90YXRlKDgwKSI+CjxwYXRoIGQ9Ik0tMTYsLTYyIEwtMzAsLTYgTDE2LC02MiBaIiBmaWxsPSIjMDg1MDQxIi8+CjxyZWN0IHg9Ii0xMiIgeT0iLTIyIiB3aWR0aD0iMTAiIGhlaWdodD0iMjIiIGZpbGw9IiMwODUwNDEiLz48cmVjdCB4PSIyIiB5PSItMjIiIHdpZHRoPSIxMCIgaGVpZ2h0PSIyMiIgZmlsbD0iIzA4NTA0MSIvPgo8cmVjdCB4PSItMTYiIHk9Ii02MiIgd2lkdGg9IjMyIiBoZWlnaHQ9IjQyIiByeD0iOCIgZmlsbD0iIzFEOUU3NSIvPgo8Y2lyY2xlIGN4PSIwIiBjeT0iLTc0IiByPSIxMiIgZmlsbD0iI0U4QzRBOCIvPgo8cmVjdCB4PSItMTIiIHk9Ii03OCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjYiIHJ4PSIzIiBmaWxsPSIjMDQzNDJDIi8+CjwvZz4KPHBhdGggZD0iTTI2NiwxMTIgcTQsLTggOCwwIGE0LDQgMCAxLDEgLTgsMCBaIiBmaWxsPSIjQjVENEY0Ii8+CjxwYXRoIGQ9Ik0yNzgsMTI0IHE0LC04IDgsMCBhNCw0IDAgMSwxIC04LDAgWiIgZmlsbD0iI0I1RDRGNCIvPgo8cmVjdCB4PSIwIiB5PSIxOTQiIHdpZHRoPSIzMTAiIGhlaWdodD0iMzYiIGZpbGw9IiM1RjVFNUEiLz4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNzAsMTk0KSI+CjxwYXRoIGQ9Ik04LC0zNiBRMjQsLTQ4IDM0LC00NCBRMjQsLTQwIDE0LC0zMiBaIiBmaWxsPSIjQjRCMkE5Ii8+CjxyZWN0IHg9Ii0xNCIgeT0iLTM0IiB3aWR0aD0iMjgiIGhlaWdodD0iMjgiIHJ4PSI4IiBmaWxsPSIjMkE3OEQ2Ii8+CjxyZWN0IHg9IjQiIHk9Ii0xMCIgd2lkdGg9IjI2IiBoZWlnaHQ9IjgiIHJ4PSIzIiBmaWxsPSIjMEM0NDdDIi8+PHJlY3QgeD0iNCIgeT0iLTIiIHdpZHRoPSI4IiBoZWlnaHQ9IjEyIiBmaWxsPSIjMEM0NDdDIi8+CjxjaXJjbGUgY3g9IjAiIGN5PSItNDYiIHI9IjEyIiBmaWxsPSIjRjVDNEIzIi8+CjxyZWN0IHg9Ii0xMiIgeT0iLTUwIiB3aWR0aD0iMjQiIGhlaWdodD0iNiIgcng9IjMiIGZpbGw9IiMwQzQ0N0MiLz4KPHJlY3QgeD0iMTgiIHk9Ii0yNiIgd2lkdGg9IjEyIiBoZWlnaHQ9IjE4IiByeD0iMyIgZmlsbD0iIzJDMkMyQSIvPjxyZWN0IHg9IjIwIiB5PSItMjMiIHdpZHRoPSI4IiBoZWlnaHQ9IjExIiBmaWxsPSIjNDQ0NDQxIi8+CjwvZz4KPHRleHQgY2xhc3M9InRzIiB4PSIxMzAiIHk9IjIxOCIgc3R5bGU9ImZpbGw6I0YxRUZFOCI+Tm9ib2R5IGZpbGVkIGEgdGlja2V0LjwvdGV4dD4KPC9nPgo8L3N2Zz4K"></div>
+      <p class="source">Comic from Module 3: <code>03-rewind/meteor-mite-and-the-gale-comic.svg</code></p>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · How I proved it -->
+<section class="slide" data-title="How I proved it">
+  <div class="inner">
+    <div class="kicker"><span class="n">06</span>How I proved it · six modules, six of my own prompts</div>
+    <h2>Every claim here traces back to a question I asked.</h2>
+    <div class="grid g3"><div class="mod"><div class="mod-head"><span class="mod-num">Module 1 · Onboard</span><span class="mod-skill">Brief Claude once</span></div><div class="prompt">What&#x27;s contradictory or missing, not just in the company documents, but across Rook&#x27;s wiki, its database, and the files in my repo?</div><div class="found"><b>Missed and turned-down pings are stored separately but scored the same.</b> Marcus asked about it on 14 Aug and nobody answered. The ping-wait cut shipped with no experiment, and there's no answer-time data to run one.</div><div class="artifact">Artifact: the Working context in CLAUDE.md</div></div>
+<div class="mod"><div class="mod-head"><span class="mod-num">Module 2 · Listen</span><span class="mod-skill">Count, group, quote</span></div><div class="prompt">how many of these requests are somehow represented in the roadmap?</div><div class="found"><b>Only 3 of 8 interview complaint groups touch the roadmap.</b> The top one, losing the race (3 of 4 interviews), was made worse by "ping timeout tuning". Interviews and the 147 tickets came from different people.</div><div class="artifact">Artifact: the ticket groups and roadmap fit, saved in CLAUDE.md</div></div>
+<div class="mod"><div class="mod-head"><span class="mod-num">Module 3 · Verify</span><span class="mod-skill">See the rows, check twice</span></div><div class="prompt">Compare the support_tickets table on rook-database against the pings table. Do they agree with each other? When do the numbers actually move? How does the number we would put in front of the director connects to tickets exactly?</div><div class="found"><b>Tickets and pings agree on every count and date.</b> Misses start on release day, and silence follows about 5 days later. The number for Helen: <b>51 → 6</b> pings a week to the quiet four.</div><div class="artifact">Artifacts: 03-rewind/pings-used.csv and the Mite and Gale comic</div></div>
+<div class="mod"><div class="mod-head"><span class="mod-num">Module 4 · Inspect</span><span class="mod-skill">What it does, and doesn't</span></div><div class="prompt">give me three hypothesis and their confidence levels and how you&#x27;d test those things next</div><div class="found"><b>The only thing that puts points back is a yes</b> (<code>history.py:25</code>). The what-if replay showed "a miss isn't a no" is the main lever: none of the four drops below 0.76.</div><div class="artifact">Artifact: 04-x-ray-vision/verdict.md</div></div>
+<div class="mod"><div class="mod-head"><span class="mod-num">Module 5 · Prototype</span><span class="mod-skill">Brief first, then build</span></div><div class="prompt">the launch day option doesn&#x27;t seem to make any sense because Mite will stay flat at 0 priority score and no matter how many calls they receive it will never appear in the console</div><div class="found"><b>My pushback fixed the model.</b> Adding busy time and a responder from another area showed the fix alone leaves the four at 0. The 5-day check-in gets Mite back, from 0.50 to about 0.9.</div><div class="artifact">Artifacts: 05-super-speed/brief.md and prototype.html</div></div>
+<div class="mod"><div class="mod-head"><span class="mod-num">Module 6 · Automate</span><span class="mod-skill">Write it once, let it run</span></div><div class="prompt">I&#x27;m thinking that 7. has to do with system thinking, but &quot;who loses&quot; feels off to me, as a product director we don&#x27;t want people to lose, we want to ensure the system is stronger and works best for the business, how to rephrase and potentially rethink?</div><div class="found"><b>"Who loses" became "system health": loops, load at both ends, recovery.</b> Both 4.2 roadmap items fail 6 of 8 checks. My own brief fails 7 and 8.</div><div class="artifact">Artifact: .claude/skills/review-checklist, every Monday at 08:12</div></div></div>
+  </div>
+</section>
+
+<!-- 8 · Choosing the fix -->
+<section class="slide" data-title="Choosing the fix">
+  <div class="inner split">
+    <div>
+      <div class="kicker"><span class="n">07</span>Choosing the fix · same pings, different rules</div>
+      <h2>One rule change does most of the work.</h2>
+      <div class="chart" id="chart-whatif"></div>
+    </div>
+    <div style="display:grid;gap:12px">
+      <div class="card opt no"><div class="badge">✕</div><div><h3>Roll back 4.2</h3><p>Proximity weighting was asked for by responders covering wide areas. A rollback swaps one angry group for another, and leaves the trap in the code.</p></div></div>
+      <div class="card opt no"><div class="badge">✕</div><div><h3>Add score recovery only</h3><p>Too slow. The four end at 0.23–0.35 and still sit 10 minutes behind.</p></div></div>
+      <div class="card opt yes"><div class="badge">✓</div><div><h3>A miss isn't a no</h3><p>The four stay at 0.76–0.84, about 3 minutes behind. That's the lever. The replay understates it, because they'd also have got more pings.</p></div></div>
+      <div class="card opt yes"><div class="badge">✓</div><div><h3>Plus a way back for those already stuck</h3><p>On launch day the four are still at 0. Only the 5-day check-in gets them asked again (Module 5 finding).</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 · The fix, live -->
+<section class="slide" data-title="The fix, live">
+  <div class="inner">
+    <div class="kicker"><span class="n">08</span>The fix, live · try it</div>
+    <h2>Built around Mite, seen through Kip's console.</h2>
+    <div class="split" style="grid-template-columns:minmax(0,1fr) minmax(0,2.1fr)">
+      <div>
+        <div class="fixlist">
+          <div class="card"><h3>1 · A miss isn't a no</h3><p>Still recorded, no longer punished.</p></div>
+          <div class="card"><h3>2 · "Still available?"</h3><p>After 3 misses in a row or 5 quiet days. A yes resets to neutral, 0.50. A "not tonight" costs nothing.</p></div>
+          <div class="card"><h3>3 · Kip sees why</h3><p>Usual pings, a reason, a 5-day warning and a score line on each card.</p></div>
+          <div class="card"><h3>4 · Quick no, faster help</h3><p>A no within 40s earns +0.02, capped at 0.50. Moved to "Next": it speeds up the system, it doesn't fix Mite.</p></div>
+        </div>
+        <ol class="steps">
+          <li><span>Click <b>Launch day</b>, then <b>Today (4.2)</b>. Send callouts: Mite stays at 0.00.</span></li>
+          <li><span>Switch to <b>With the fix</b>. Skip to Thursday: Kip's card warns, and Mite's phone asks.</span></li>
+          <li><span>Tap <b>Yes, I'm here</b>, then take the next callouts. Watch Mite's score line climb.</span></li>
+        </ol>
+      </div>
+      <div class="proto-frame">
+        <div class="proto-bar"><i></i><i></i><i></i><span>05-super-speed/prototype.html · live</span><a href="05-super-speed/prototype.html" target="_blank" rel="noopener">Open full screen ↗</a></div>
+        <iframe title="Dispatch prototype: getting quiet responders back on the list" srcdoc="&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;title&gt;Dispatch Prototype: Meteor Mite&lt;/title&gt;
+&lt;style&gt;
+  :root {
+    --bg: #f3f3ef;
+    --panel: #ffffff;
+    --ink: #1b1d21;
+    --muted: #5f6670;
+    --line: #dcdcd5;
+    --soft: #f7f7f4;
+    --accent: #2a59d6;
+    --accent-soft: #e7edfb;
+    --good: #137a4b;
+    --good-soft: #e4f4eb;
+    --warn: #a74b06;
+    --warn-soft: #fdf0e2;
+    --bad: #b42318;
+    --bad-soft: #fcebe9;
+    --mite: #eb6834;
+    --gale: #2a78d6;
+    --console-bar: #1f2430;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Inter, Helvetica, Arial, sans-serif;
+  }
+  button { font: inherit; cursor: pointer; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 48px; }
+
+  /* Header and controls */
+  header { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between; margin-bottom: 14px; }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-size: 24px; margin: 2px 0 0; letter-spacing: -.01em; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 3px; }
+  .seg button { border: 0; background: transparent; padding: 8px 14px; border-radius: 8px; color: var(--muted); }
+  .seg button.on { background: var(--ink); color: #fff; }
+  .seg-label { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+  .switches { display: flex; flex-wrap: wrap; gap: 14px; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 16px; }
+  .btn { border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 9px 14px; border-radius: 9px; }
+  .btn:hover:not(:disabled) { border-color: #b9b9b0; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .controls .clock { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--muted); }
+
+  .guide { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; font-size: 14px; }
+  .guide ol { margin: 6px 0 0; padding-left: 20px; }
+  .guide li { margin: 2px 0; }
+
+  /* Stage */
+  .stage { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
+  @media (max-width: 880px) { .stage { grid-template-columns: 1fr; } }
+
+  .surface-label { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px 2px; }
+
+  /* Kip&#x27;s console */
+  .console { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .console-bar { background: var(--console-bar); color: #e9ebf0; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; font-size: 13px; }
+  .console-bar b { color: #fff; }
+  .console-body { padding: 14px; }
+  .console-note { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .cards { grid-template-columns: 1fr; } }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px 14px; position: relative; background: var(--panel); }
+  .card::before { content: &quot;&quot;; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 10px 0 0 10px; }
+  .card.mite::before { background: var(--mite); }
+  .card.gale::before { background: var(--gale); }
+  .card h3 { margin: 0; font-size: 17px; }
+  .card .area { font-size: 13px; color: var(--muted); }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
+  .pill { font-size: 12px; padding: 3px 9px; border-radius: 999px; white-space: nowrap; background: var(--good-soft); color: var(--good); }
+  .pill.ping { background: var(--accent-soft); color: var(--accent); }
+  .pill.away { background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
+  .pill.paused { background: var(--warn-soft); color: var(--warn); }
+  .stat { display: flex; justify-content: space-between; font-size: 14px; padding: 5px 0; border-top: 1px dashed var(--line); }
+  .stat span:first-child { color: var(--muted); }
+  .stat b { font-variant-numeric: tabular-nums; }
+  .usual { color: var(--muted); font-weight: 400; }
+  .why { margin-top: 10px; font-size: 13px; padding: 8px 10px; border-radius: 8px; background: var(--soft); color: var(--ink); }
+  .why.good { background: var(--good-soft); }
+  .why.warn { background: var(--warn-soft); }
+  .why.accent { background: var(--accent-soft); }
+  .flag { margin-top: 10px; font-size: 13px; padding: 8px 10px; border-radius: 8px; background: var(--bad-soft); color: var(--bad); border: 1px solid #f3c2bc; }
+  .flag b { display: block; }
+
+  .badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 600; vertical-align: 1px; margin-right: 4px; }
+
+  /* Phone */
+  .phone { width: 300px; max-width: 100%; height: 600px; margin: 0 auto; border: 11px solid #15171b; border-radius: 42px; background: #fbfbfa; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,.12); }
+  .notch { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 92px; height: 24px; background: #15171b; border-radius: 14px; z-index: 2; }
+  .screen { position: absolute; inset: 0; padding: 46px 18px 22px; display: flex; flex-direction: column; }
+  .app-head { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+  .app-head b { color: var(--ink); font-size: 15px; }
+  .idle-mid { margin: auto 0; text-align: center; color: var(--muted); }
+  .idle-mid .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--good); display: inline-block; margin-bottom: 8px; box-shadow: 0 0 0 6px var(--good-soft); }
+  .idle-mid h4 { margin: 4px 0; color: var(--ink); font-size: 18px; }
+  .idle-foot { font-size: 13px; color: var(--muted); text-align: center; }
+
+  .ping-card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 16px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+  .ping-kicker { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .ping-card h4 { margin: 6px 0 2px; font-size: 18px; line-height: 1.25; }
+  .ping-meta { font-size: 13px; color: var(--muted); }
+  .count { display: flex; justify-content: space-between; align-items: baseline; margin: 14px 0 6px; }
+  .count .left { font-size: 30px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .count .phase { font-size: 12px; color: var(--muted); text-align: right; max-width: 140px; }
+  .bar { position: relative; height: 8px; background: #ececE6; border-radius: 4px; overflow: hidden; }
+  .bar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 4px; }
+  .bar { overflow: visible; }
+  .bar .mark { position: absolute; top: -4px; bottom: -4px; left: 33.333%; width: 2px; background: var(--good); }
+  .bar-legend { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .answer { display: grid; gap: 8px; margin-top: 16px; }
+  .answer button { border: 0; border-radius: 12px; padding: 13px; font-weight: 600; }
+  .take { background: var(--good); color: #fff; }
+  .decline { background: #ececE6; color: var(--ink); }
+  .hint { font-size: 12.5px; color: var(--good); margin-top: 10px; text-align: center; }
+  .runout { margin-top: auto; text-align: center; font-size: 12px; }
+  .runout button { border: 1px dashed #b9b9b0; background: transparent; color: var(--muted); border-radius: 8px; padding: 6px 10px; }
+
+  .toast { margin: auto 0; text-align: center; padding: 18px; border-radius: 16px; background: var(--soft); font-size: 15px; }
+  .toast.good { background: var(--good-soft); color: var(--good); }
+
+  .checkin { margin: auto 0; background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 18px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+  .checkin h4 { margin: 0 0 6px; font-size: 19px; }
+  .checkin p { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+
+  .phone-caption { text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  /* Behind the scenes */
+  .backstage { margin-top: 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .backstage h2 { font-size: 16px; margin: 0 0 2px; }
+  .backstage .sub { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+  .rules { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .rule { font-size: 12.5px; padding: 4px 9px; border-radius: 999px; background: var(--soft); border: 1px solid var(--line); }
+  .rule.changed { background: var(--accent-soft); border-color: #c7d4f6; color: var(--accent); }
+  .scores { display: grid; gap: 8px; margin-bottom: 14px; }
+  .score-row { display: grid; grid-template-columns: 110px minmax(0, 1fr) 44px; gap: 10px; align-items: center; font-size: 14px; }
+  .track { position: relative; height: 12px; background: #ececE6; border-radius: 6px; }
+  .track .val { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; transition: width .4s ease; }
+  .track .neutral { position: absolute; left: 50%; top: -4px; bottom: -4px; width: 2px; background: #9a9a90; }
+  .score-row b { font-variant-numeric: tabular-nums; text-align: right; }
+  .neutral-note { font-size: 12px; color: var(--muted); margin: -6px 0 12px 120px; }
+  .chart-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; font-size: 14px; margin: 4px 0 6px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--muted); }
+  .sw { display: inline-block; width: 16px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+  .sw.dash { background: repeating-linear-gradient(90deg, #9a9a90 0 4px, transparent 4px 7px); }
+  .chart-wrap { position: relative; margin-bottom: 10px; }
+  .chart-wrap svg { display: block; width: 100%; height: auto; }
+  .tip { position: absolute; top: 6px; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font-size: 12.5px; line-height: 1.4; box-shadow: 0 4px 14px rgba(0,0,0,.1); width: 250px; }
+  .tip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+  .table-view { font-size: 13px; margin-bottom: 12px; }
+  .table-view summary { cursor: pointer; color: var(--muted); }
+  .table-view table { border-collapse: collapse; width: 100%; margin-top: 6px; }
+  .table-view th, .table-view td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+  .table-view .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .spark { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); }
+  .spark-head { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .spark-head b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .spark svg { display: block; width: 100%; height: 34px; }
+  .log { list-style: none; margin: 0; padding: 0; max-height: 300px; overflow: auto; border-top: 1px solid var(--line); }
+  .log li { display: grid; grid-template-columns: 82px minmax(0, 1fr); gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+  .log time { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .log li.good span { color: var(--good); }
+  .log li.warn span { color: var(--warn); }
+  .log li.bad span { color: var(--bad); }
+  .log li.accent span { color: var(--accent); }
+  .log li.day { background: var(--soft); }
+
+  footer { margin-top: 18px; font-size: 12.5px; color: var(--muted); }
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;wrap&quot;&gt;
+
+  &lt;header&gt;
+    &lt;div&gt;
+      &lt;div class=&quot;eyebrow&quot;&gt;Rook Dispatch · clickable prototype · from brief.md&lt;/div&gt;
+      &lt;h1&gt;Getting quiet responders back on the list&lt;/h1&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;switches&quot;&gt;
+      &lt;div&gt;
+        &lt;div class=&quot;seg-label&quot;&gt;Start&lt;/div&gt;
+        &lt;div class=&quot;seg&quot; role=&quot;group&quot; aria-label=&quot;Starting point&quot;&gt;
+          &lt;button data-action=&quot;scenario&quot; data-scenario=&quot;before&quot;&gt;Before Mite went quiet&lt;/button&gt;
+          &lt;button data-action=&quot;scenario&quot; data-scenario=&quot;launch&quot;&gt;Launch day&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div&gt;
+        &lt;div class=&quot;seg-label&quot;&gt;Rules&lt;/div&gt;
+        &lt;div class=&quot;seg&quot; role=&quot;group&quot; aria-label=&quot;Rules&quot;&gt;
+          &lt;button data-action=&quot;mode&quot; data-mode=&quot;today&quot;&gt;Today (4.2)&lt;/button&gt;
+          &lt;button data-action=&quot;mode&quot; data-mode=&quot;fix&quot;&gt;With the fix&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/header&gt;
+
+  &lt;div class=&quot;guide&quot; id=&quot;guide&quot;&gt;&lt;/div&gt;
+
+  &lt;div class=&quot;controls&quot;&gt;
+    &lt;button class=&quot;btn primary&quot; data-action=&quot;callout&quot; id=&quot;btn-callout&quot;&gt;New callout in Eastgate&lt;/button&gt;
+    &lt;button class=&quot;btn&quot; data-action=&quot;skip&quot; id=&quot;btn-skip&quot;&gt;Skip to next day&lt;/button&gt;
+    &lt;button class=&quot;btn&quot; data-action=&quot;restart&quot;&gt;Restart&lt;/button&gt;
+    &lt;span class=&quot;clock&quot; id=&quot;clock&quot;&gt;&lt;/span&gt;
+  &lt;/div&gt;
+
+  &lt;div class=&quot;stage&quot;&gt;
+    &lt;section&gt;
+      &lt;div class=&quot;surface-label&quot;&gt;Kip&#x27;s console&lt;/div&gt;
+      &lt;div class=&quot;console&quot;&gt;
+        &lt;div class=&quot;console-bar&quot;&gt;&lt;span&gt;&lt;b&gt;Rook Dispatch&lt;/b&gt; · Console&lt;/span&gt;&lt;span&gt;Kip · 2 responders&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;console-body&quot;&gt;
+          &lt;p class=&quot;console-note&quot; id=&quot;console-note&quot;&gt;&lt;/p&gt;
+          &lt;div class=&quot;cards&quot; id=&quot;cards&quot;&gt;&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;div class=&quot;surface-label&quot; style=&quot;text-align:center&quot;&gt;Meteor Mite&#x27;s phone&lt;/div&gt;
+      &lt;div class=&quot;phone&quot; aria-live=&quot;polite&quot;&gt;
+        &lt;div class=&quot;notch&quot;&gt;&lt;/div&gt;
+        &lt;div class=&quot;screen&quot; id=&quot;screen&quot;&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;phone-caption&quot;&gt;The demo clock runs 4× faster: 60 seconds take 15.&lt;/div&gt;
+    &lt;/section&gt;
+  &lt;/div&gt;
+
+  &lt;section class=&quot;backstage&quot;&gt;
+    &lt;h2&gt;Behind the scenes&lt;/h2&gt;
+    &lt;p class=&quot;sub&quot;&gt;What Dispatch is doing with each answer. Nobody sees this today. It&#x27;s here so you can watch the rules work.&lt;/p&gt;
+    &lt;div class=&quot;rules&quot; id=&quot;rules&quot;&gt;&lt;/div&gt;
+    &lt;div class=&quot;scores&quot; id=&quot;scores&quot;&gt;&lt;/div&gt;
+    &lt;div class=&quot;neutral-note&quot;&gt;The line marks neutral (0.50), where everyone starts. A higher score means asked sooner.&lt;/div&gt;
+    &lt;div class=&quot;chart-head&quot;&gt;
+      &lt;b&gt;Score history&lt;/b&gt;
+      &lt;span class=&quot;legend&quot;&gt;
+        &lt;span&gt;&lt;span class=&quot;sw&quot; style=&quot;background:var(--mite)&quot;&gt;&lt;/span&gt;Meteor Mite&lt;/span&gt;
+        &lt;span&gt;&lt;span class=&quot;sw&quot; style=&quot;background:var(--gale)&quot;&gt;&lt;/span&gt;The Gale&lt;/span&gt;
+        &lt;span&gt;&lt;span class=&quot;sw dash&quot;&gt;&lt;/span&gt;Neutral (0.50)&lt;/span&gt;
+      &lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;chart-wrap&quot; id=&quot;chart-wrap&quot;&gt;&lt;div id=&quot;chart&quot;&gt;&lt;/div&gt;&lt;div class=&quot;tip&quot; id=&quot;tip&quot; hidden&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;details class=&quot;table-view&quot;&gt;&lt;summary&gt;Show score history as a table&lt;/summary&gt;&lt;div id=&quot;hist-table&quot;&gt;&lt;/div&gt;&lt;/details&gt;
+    &lt;ul class=&quot;log&quot; id=&quot;log&quot;&gt;&lt;/ul&gt;
+  &lt;/section&gt;
+
+  &lt;footer&gt;
+    Prototype only. Scoring follows the 4.2 routing code (travel time × 0.60 + recent acceptance × 0.25 + capability × 0.15; a yes +0.08, a no −0.12) and the changes in brief.md. Callouts and travel times are made up. A responder who takes a callout is out for 40 minutes, and callouts you send come 25 minutes apart. The next-nearest responder outside Eastgate stands in for the other twelve, at their median score (0.94). &quot;Usual: 12&quot; is each responder&#x27;s average weekly pings in the six weeks before 4.2. Skipped days replay Mite answering the way Mite did in the release week: two pings taken, then one missed. Launch-day scores come from the Module 3 replay on 6 Sep: the quiet four at 0, the other twelve&#x27;s median at 0.94.
+  &lt;/footer&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+  const R = { WAIT: 60, QUICK: 40, CREDIT: 0.08, PENALTY: 0.12, BOOST: 0.02, NEUTRAL: 0.5,
+              W_PROX: 0.60, W_ACC: 0.25, W_CAP: 0.15, HORIZON: 45 };
+  const SPEED = 4;
+  const USUAL = 12;
+  const JOB_MINUTES = 40;   // a responder who takes a callout is out of the line this long
+  const LIVE_GAP = 25;      // minutes between callouts you send by hand
+  const OUT_SCORE = 0.94;   // next-nearest responder outside Eastgate: the other twelve&#x27;s median
+  const DAYS = [&#x27;Mon&#x27;, &#x27;Tue&#x27;, &#x27;Wed&#x27;, &#x27;Thu&#x27;, &#x27;Fri&#x27;, &#x27;Sat&#x27;, &#x27;Sun&#x27;];
+  // Travel times in minutes for Mite, The Gale and the next-nearest responder outside Eastgate.
+  const CALLOUTS = [
+    { what: &#x27;Warehouse fire, Dock Road&#x27;, mite: 7, gale: 8, out: 17 },
+    { what: &#x27;Car hanging off the Eastgate overpass&#x27;, mite: 9, gale: 9, out: 14 },
+    { what: &#x27;Gas leak, Tannery Lane&#x27;, mite: 6, gale: 8, out: 16 },
+    { what: &#x27;Rooftop standoff, Mill Street&#x27;, mite: 12, gale: 10, out: 15, galeNo: true },
+    { what: &#x27;Flooded underpass, Canal Row&#x27;, mite: 5, gale: 7, out: 18 },
+    { what: &#x27;Crowd crush outside the Arena&#x27;, mite: 8, gale: 8, out: 12 }
+  ];
+  const SKIP_TIMES = [10 * 60 + 10, 10 * 60 + 40, 14 * 60];
+  const EVENING = 18 * 60;
+  const NAME = { mite: &#x27;Mite&#x27;, gale: &#x27;The Gale&#x27;, out: &#x27;next-nearest outside Eastgate&#x27; };
+
+  let S, timer = null, toastId = 0;
+
+  const clamp = v =&gt; Math.max(0, Math.min(1, v));
+  const f2 = v =&gt; v.toFixed(2);
+  const hhmm = m =&gt; String(Math.floor(m / 60) % 24).padStart(2, &#x27;0&#x27;) + &#x27;:&#x27; + String(m % 60).padStart(2, &#x27;0&#x27;);
+  const now = () =&gt; hhmm(S.minutes);
+  const stamp = () =&gt; DAYS[S.day] + &#x27; &#x27; + now();
+  const plural = (n, w) =&gt; n + &#x27; &#x27; + w + (n === 1 ? &#x27;&#x27; : &#x27;s&#x27;);
+  const total = (score, mins) =&gt; R.W_PROX * Math.max(0, 1 - mins / R.HORIZON) + R.W_ACC * score + R.W_CAP;
+  const fix = () =&gt; S.mode === &#x27;fix&#x27;;
+  const clock = () =&gt; S.day * 1440 + S.minutes;
+  const free = k =&gt; clock() &gt;= (S.busy[k] || 0);
+  const badge = n =&gt; fix() ? `&lt;span class=&quot;badge&quot; title=&quot;Brief item ${n}&quot;&gt;${n}&lt;/span&gt;` : &#x27;&#x27;;
+
+  const GUIDES = {
+    before: `&lt;b&gt;Try this.&lt;/b&gt; Kip runs two responders in Eastgate, Meteor Mite and The Gale. Both usually get about 12 pings a week.
+      &lt;ol&gt;
+        &lt;li&gt;Press &lt;b&gt;New callout in Eastgate&lt;/b&gt;. Mite is first in line, so Mite&#x27;s phone buzzes.&lt;/li&gt;
+        &lt;li&gt;Don&#x27;t answer. Let it run out, the way Mite&#x27;s pings did after 4.2 cut the wait to 60 seconds. Then send a few more callouts.&lt;/li&gt;
+        &lt;li&gt;Switch to &lt;b&gt;With the fix&lt;/b&gt; and do the same. Watch Mite&#x27;s phone, Kip&#x27;s cards and the scores below.&lt;/li&gt;
+        &lt;li&gt;With the fix, also try &lt;b&gt;Can&#x27;t make it&lt;/b&gt; inside the first 40 seconds, then after it. Or leave the check-in unanswered and skip ahead five days.&lt;/li&gt;
+      &lt;/ol&gt;`,
+    launch: `&lt;b&gt;Launch day.&lt;/b&gt; The fix ships, but Mite is already where today&#x27;s rules left Mite: a score of 0.00 and about one ping a week. The Gale is at 0.94.
+      &lt;ol&gt;
+        &lt;li&gt;Press &lt;b&gt;New callout in Eastgate&lt;/b&gt; a few times. The Gale takes what it can. While The Gale is out on a job, the callout goes to someone from another area, not Mite. At 0.00, Mite has to be about 18 minutes closer to win. Mite&#x27;s phone stays silent.&lt;/li&gt;
+        &lt;li&gt;Skip ahead to Thursday. With the fix, Kip&#x27;s card warns that Mite hasn&#x27;t been pinged in 5 days, and Mite&#x27;s phone asks &quot;It&#x27;s been quiet. Still available?&quot; Today&#x27;s rules do neither, and Mite stays at 0.00 for good.&lt;/li&gt;
+        &lt;li&gt;Tap &lt;b&gt;Yes, I&#x27;m here&lt;/b&gt;. Mite&#x27;s score resets to neutral (0.50). Now Mite only needs to be about 8 minutes closer.&lt;/li&gt;
+        &lt;li&gt;Send more callouts and take them. Mite wins the nearby ones while The Gale is busy, and each yes adds 0.08. Watch Mite&#x27;s line climb in the score history below and on Kip&#x27;s card.&lt;/li&gt;
+      &lt;/ol&gt;`
+  };
+
+  function fresh(mode, scenario) {
+    const launch = scenario === &#x27;launch&#x27;;
+    return {
+      mode, scenario, day: 0, minutes: EVENING, n: 0, num: 1421, autoIdx: 0, busy: {},
+      mite: launch ? { score: 0.00, pings: 0, lastPing: { day: -2, t: &#x27;19:30&#x27; } }
+                   : { score: 0.96, pings: 1, lastPing: { day: 0, t: &#x27;11:15&#x27; } },
+      gale: { score: launch ? 0.94 : 0.80, pings: 2, lastPing: { day: 0, t: &#x27;14:05&#x27; } },
+      phone: &#x27;idle&#x27;, ping: null, toast: null,
+      missRun: 0, missesTonight: 0, lateNos: 0, galeCovered: 0, unfilled: 0,
+      checkin: false, away: false, note: null, log: [], history: []
+    };
+  }
+
+  function log(text, tone) { S.log.unshift({ at: stamp(), text, tone: tone || &#x27;&#x27; }); }
+
+  function change(who, old, nw) {
+    const d = Math.round((nw - old) * 100) / 100;
+    if (d === 0) return `${who} stays at ${f2(old)}.`;
+    return `${who} ${f2(old)} → ${f2(nw)} (${d &gt; 0 ? &#x27;+&#x27; : &#x27;−&#x27;}${Math.abs(d).toFixed(2)}).`;
+  }
+
+  function nextCallout() {
+    const c = Object.assign({}, CALLOUTS[S.n % CALLOUTS.length], { num: S.num++, trail: [] });
+    S.n++;
+    return c;
+  }
+
+  // Who gets asked, in order. Anyone out on a callout isn&#x27;t available. Mite also sits out
+  // while away or waiting on the check-in. The next-nearest responder from another area
+  // is always in the running.
+  function lineFor(c) {
+    const list = [{ k: &#x27;out&#x27;, t: total(OUT_SCORE, c.out) }];
+    if (free(&#x27;gale&#x27;)) list.push({ k: &#x27;gale&#x27;, t: total(S.gale.score, c.gale) });
+    if (!S.away &amp;&amp; !S.checkin &amp;&amp; free(&#x27;mite&#x27;)) list.push({ k: &#x27;mite&#x27;, t: total(S.mite.score, c.mite) });
+    list.sort((a, b) =&gt; b.t - a.t);
+    return list;
+  }
+
+  function stopTimer() { clearInterval(timer); timer = null; }
+
+  function showToast(text, tone) {
+    S.phone = &#x27;toast&#x27;;
+    S.toast = { text, tone };
+    const id = ++toastId;
+    setTimeout(() =&gt; {
+      if (id === toastId &amp;&amp; S.phone === &#x27;toast&#x27;) {
+        S.phone = S.away ? &#x27;away&#x27; : S.checkin ? &#x27;checkin&#x27; : &#x27;idle&#x27;;
+        render();
+      }
+    }, 2400);
+  }
+
+  // A miss: today it costs the same as a no; with the fix it costs nothing.
+  function applyMiss() {
+    const old = S.mite.score;
+    const nw = fix() ? old : clamp(old - R.PENALTY);
+    S.mite.score = nw;
+    S.missRun++;
+    S.missesTonight++;
+    return { old, nw };
+  }
+
+  function maybeCheckin() {
+    if (fix() &amp;&amp; S.missRun &gt;= 3 &amp;&amp; !S.checkin) {
+      S.checkin = true;
+      S.checkinWhy = &#x27;missed&#x27;;
+      S.phone = &#x27;checkin&#x27;;
+      S.note = { kind: &#x27;checkin&#x27;, at: stamp() };
+      log(`3 missed in a row. Mite&#x27;s phone asks &quot;Still available tonight?&quot; Mite sits out until Mite answers, so no callout waits on an unanswered phone.`, &#x27;accent&#x27;);
+      return true;
+    }
+    return false;
+  }
+
+  // The 5-day warning on Kip&#x27;s card also asks Mite, once per quiet spell.
+  function maybeQuietCheckin() {
+    const p = S.mite.lastPing, key = p.day + &#x27; &#x27; + p.t;
+    if (!fix() || S.checkin || S.away || S.day - p.day &lt; 5 || S.quietAskedFor === key) return;
+    S.checkin = true;
+    S.checkinWhy = &#x27;quiet&#x27;;
+    S.quietAskedFor = key;
+    S.phone = &#x27;checkin&#x27;;
+    S.note = { kind: &#x27;checkin&#x27;, at: stamp() };
+    log(`5 days without a ping. Kip&#x27;s card shows the warning, and Mite&#x27;s phone asks &quot;Still available?&quot;`, &#x27;accent&#x27;);
+  }
+
+  // One point on the score history: both scores after something changed them.
+  function snap(label) {
+    S.history.push({ at: stamp(), day: S.day, mite: S.mite.score, gale: S.gale.score, label });
+  }
+
+  // Close a callout: note how it ended and record the scores it left behind.
+  function settle(c, ending) {
+    c.trail.push(ending);
+    snap(`#${c.num}: ${c.trail.join(&#x27;, &#x27;)}`);
+  }
+
+  // Offer the callout down the line. Live mode stops at Mite&#x27;s phone and waits for a tap.
+  function offer(c, line, tally) {
+    if (!line.length) {
+      S.unfilled++;
+      if (tally) tally.nobody++;
+      else log(`Nobody took #${c.num}. Kip has to find cover another way.`, &#x27;bad&#x27;);
+      settle(c, &#x27;nobody took it&#x27;);
+      return;
+    }
+    const who = line[0].k, rest = line.slice(1);
+    if (who === &#x27;out&#x27;) {
+      if (tally) tally.out++;
+      else log(`The next-nearest responder from outside Eastgate (${c.out} min away) took #${c.num}.`);
+      settle(c, &#x27;someone from outside Eastgate took it&#x27;);
+      return;
+    }
+    if (who === &#x27;gale&#x27;) {
+      const g = S.gale, old = g.score;
+      g.pings++; g.lastPing = { day: S.day, t: now() };
+      if (tally) tally.g++;
+      if (c.galeNo &amp;&amp; S.scenario !== &#x27;launch&#x27;) {
+        g.score = clamp(old - R.PENALTY);
+        if (!tally) log(`The Gale turned down #${c.num}. ${change(&#x27;The Gale&#x27;, old, g.score)}`);
+        c.trail.push(&#x27;The Gale said no&#x27;);
+        return offer(c, rest, tally);
+      }
+      g.score = clamp(old + R.CREDIT);
+      S.busy.gale = clock() + JOB_MINUTES;
+      if (c.miteAsked) S.galeCovered++;
+      if (!tally) log(`The Gale took #${c.num}. ${change(&#x27;The Gale&#x27;, old, g.score)}`);
+      settle(c, &#x27;The Gale took it&#x27;);
+      return;
+    }
+    const m = S.mite;
+    m.pings++; m.lastPing = { day: S.day, t: now() };
+    c.miteAsked = true;
+    if (tally) {
+      tally.m++;
+      if (S.autoIdx++ % 3 === 2) {
+        tally.miss++;
+        applyMiss();
+        c.trail.push(&#x27;Mite missed&#x27;);
+        if (maybeCheckin()) return offer(c, rest.filter(x =&gt; x.k !== &#x27;mite&#x27;), tally);
+        return offer(c, rest, tally);
+      }
+      tally.take++;
+      m.score = clamp(m.score + R.CREDIT);
+      S.busy.mite = clock() + JOB_MINUTES;
+      S.missRun = 0;
+      settle(c, &#x27;Mite took it&#x27;);
+      return;
+    }
+    S.ping = { c, rest, start: performance.now(), elapsed: 0 };
+    S.phone = &#x27;ping&#x27;;
+    timer = setInterval(tick, 100);
+  }
+
+  function newCallout() {
+    if (S.ping) return;
+    S.minutes += LIVE_GAP;
+    const c = nextCallout();
+    const line = lineFor(c);
+    const order = line.map((x, i) =&gt; `${i + 1}. ${NAME[x.k]} (${x.t.toFixed(3)})`).join(&#x27;  &#x27;);
+    const busy = (free(&#x27;gale&#x27;) ? &#x27;&#x27; : &#x27; The Gale is out on a callout.&#x27;) + (free(&#x27;mite&#x27;) ? &#x27;&#x27; : &#x27; Mite is out on a callout.&#x27;);
+    const out = S.away ? &#x27; Mite is away tonight.&#x27; : S.checkin ? &#x27; Mite is sitting out until the check-in is answered.&#x27; : &#x27;&#x27;;
+    const miteIn = line.some(x =&gt; x.k === &#x27;mite&#x27;);
+    const quiet = miteIn &amp;&amp; line[0].k !== &#x27;mite&#x27; ? &#x27; Mite\&#x27;s phone stays silent.&#x27; : &#x27;&#x27;;
+    log(`#${c.num} ${c.what}.${busy}${out} Who&#x27;s asked first (travel time + score): ${order}.${quiet}`, quiet ? &#x27;warn&#x27; : &#x27;&#x27;);
+    offer(c, line, null);
+    render();
+  }
+
+  function tick() {
+    if (!S.ping) return;
+    S.ping.elapsed = (performance.now() - S.ping.start) / 1000 * SPEED;
+    if (S.ping.elapsed &gt;= R.WAIT) { miss(); return; }
+    updateCountdown();
+  }
+
+  function take() {
+    const p = S.ping; if (!p) return;
+    stopTimer(); S.ping = null;
+    const old = S.mite.score;
+    S.mite.score = clamp(old + R.CREDIT);
+    S.busy.mite = clock() + JOB_MINUTES;
+    S.missRun = 0;
+    S.note = { kind: &#x27;taken&#x27;, at: stamp() };
+    log(`Mite took #${p.c.num} after ${Math.max(1, Math.round(p.elapsed))}s. ${change(&#x27;Mite&#x27;, old, S.mite.score)}`, &#x27;good&#x27;);
+    settle(p.c, &#x27;Mite took it&#x27;);
+    showToast(&quot;It&#x27;s yours. Kip can see you&#x27;re on it.&quot;, &#x27;good&#x27;);
+    render();
+  }
+
+  function decline() {
+    const p = S.ping; if (!p) return;
+    stopTimer(); S.ping = null;
+    const secs = Math.max(1, Math.round(p.elapsed));
+    const old = S.mite.score;
+    let nw, text, tone, toast;
+    if (fix() &amp;&amp; p.elapsed &lt;= R.QUICK) {
+      nw = old &lt; R.NEUTRAL ? Math.min(R.NEUTRAL, old + R.BOOST) : old;
+      text = `Mite said a quick no to #${p.c.num} (${secs}s), so the callout moved on ${R.WAIT - secs}s sooner. ${change(&#x27;Mite&#x27;, old, nw)}${nw === old ? &#x27; A quick no only lifts a score up to neutral (0.50).&#x27; : &#x27;&#x27;}`;
+      tone = &#x27;good&#x27;;
+      toast = &#x27;Thanks for saying so quickly. Passed on to the next responder.&#x27;;
+      S.note = { kind: &#x27;quick&#x27;, at: stamp() };
+    } else {
+      nw = clamp(old - R.PENALTY);
+      text = fix()
+        ? `Mite said no to #${p.c.num} after ${secs}s, past the 40s window. ${change(&#x27;Mite&#x27;, old, nw)}`
+        : `Mite turned down #${p.c.num} after ${secs}s. ${change(&#x27;Mite&#x27;, old, nw)}`;
+      tone = &#x27;warn&#x27;;
+      toast = &#x27;Passed on to the next responder.&#x27;;
+      if (fix()) { S.lateNos++; S.note = { kind: &#x27;late&#x27;, at: stamp() }; }
+    }
+    S.mite.score = nw;
+    S.missRun = 0;
+    log(text, tone);
+    p.c.trail.push(tone === &#x27;good&#x27; ? &#x27;Mite said a quick no&#x27; : &#x27;Mite said no&#x27;);
+    offer(p.c, p.rest, null);
+    showToast(toast, &#x27;&#x27;);
+    render();
+  }
+
+  function miss() {
+    const p = S.ping; if (!p) return;
+    stopTimer(); S.ping = null;
+    const { old, nw } = applyMiss();
+    log(`Mite missed #${p.c.num}: nobody answered in 60s. ${fix() ? &#x27;Recorded as missed, not counted as a no.&#x27; : &#x27;Counted the same as a no.&#x27;} ${change(&#x27;Mite&#x27;, old, nw)}`, fix() ? &#x27;&#x27; : &#x27;bad&#x27;);
+    p.c.trail.push(&#x27;Mite missed&#x27;);
+    offer(p.c, p.rest, null);
+    if (!maybeCheckin()) {
+      if (fix()) S.note = { kind: &#x27;missed&#x27;, at: stamp() };
+      showToast(&#x27;Missed. That callout went to the next responder.&#x27;, &#x27;&#x27;);
+    }
+    render();
+  }
+
+  function checkinYes() {
+    const old = S.mite.score, nw = Math.max(old, R.NEUTRAL);
+    S.mite.score = nw;
+    S.checkin = false; S.missRun = 0;
+    S.note = { kind: &#x27;back&#x27;, at: stamp() };
+    log(`Mite tapped &quot;Yes, I&#x27;m here&quot; and is back in line. ${old &lt; R.NEUTRAL ? change(&#x27;Mite&#x27;, old, nw) + &#x27; Reset to neutral.&#x27; : `Score is already above neutral (${f2(old)}), so it stays.`}`, &#x27;good&#x27;);
+    snap(`Mite: &quot;Yes, I&#x27;m here&quot;`);
+    showToast(&quot;You&#x27;re back in line.&quot;, &#x27;good&#x27;);
+    render();
+  }
+
+  function checkinNo() {
+    S.away = true; S.checkin = false; S.missRun = 0;
+    S.note = { kind: &#x27;away&#x27;, at: stamp() };
+    log(`Mite tapped &quot;Not tonight&quot; and is away for the rest of the shift. ${change(&#x27;Mite&#x27;, S.mite.score, S.mite.score)} Nothing is counted against Mite.`);
+    S.phone = &#x27;away&#x27;;
+    render();
+  }
+
+  function backFromAway() {
+    S.away = false;
+    S.note = { kind: &#x27;back&#x27;, at: stamp() };
+    log(`Mite tapped &quot;Actually, I&#x27;m free&quot; and is back on the list.`, &#x27;good&#x27;);
+    S.phone = &#x27;idle&#x27;;
+    render();
+  }
+
+  function skipDay() {
+    if (S.ping || S.day &gt;= 6) return;
+    S.day++;
+    S.missesTonight = 0;
+    if (S.away) {
+      S.away = false;
+      if (S.phone === &#x27;away&#x27;) S.phone = &#x27;idle&#x27;;
+      log(`New day. Mite&#x27;s &quot;not tonight&quot; has ended. Back on the list.`);
+    }
+    if (S.note &amp;&amp; [&#x27;missed&#x27;, &#x27;quick&#x27;, &#x27;taken&#x27;, &#x27;back&#x27;, &#x27;away&#x27;].includes(S.note.kind)) S.note = null;
+    const tally = { m: 0, take: 0, miss: 0, g: 0, out: 0, nobody: 0 };
+    SKIP_TIMES.forEach(t =&gt; {
+      S.minutes = t;
+      const c = nextCallout();
+      offer(c, lineFor(c), tally);
+    });
+    S.minutes = EVENING;
+    log(`${DAYS[S.day]}: 3 Eastgate callouts. Mite was pinged ${tally.m}× (took ${tally.take}, missed ${tally.miss}). The Gale was pinged ${tally.g}×. Someone from outside Eastgate took ${tally.out}.${tally.nobody ? ` Nobody took ${tally.nobody}.` : &#x27;&#x27;} Scores now: Mite ${f2(S.mite.score)}, The Gale ${f2(S.gale.score)}.`, &#x27;day&#x27;);
+    maybeQuietCheckin();
+    render();
+  }
+
+  function restart(mode, scenario) {
+    stopTimer();
+    toastId++;
+    S = fresh(mode || S.mode, scenario || S.scenario);
+    const rules = fix() ? &#x27;with the fix&#x27; : &#x27;today (4.2)&#x27;;
+    if (S.scenario === &#x27;launch&#x27;) {
+      log(`Launch day, Monday evening. Mite starts at ${f2(S.mite.score)}, where today&#x27;s rules left Mite by 6 Sep. The Gale starts at ${f2(S.gale.score)}, the median for the other twelve. Mite&#x27;s last ping was last Saturday. Rules: ${rules}.`, &#x27;day&#x27;);
+    } else {
+      log(`Monday evening. Mite (score ${f2(S.mite.score)}) and The Gale (${f2(S.gale.score)}) are Kip&#x27;s only responders in Eastgate. Rules: ${rules}.`, &#x27;day&#x27;);
+    }
+    snap(&#x27;Start of the evening&#x27;);
+    render();
+  }
+
+  /* ---------- Rendering ---------- */
+
+  const dayLabel = d =&gt; d &lt; 0 ? &#x27;last &#x27; + DAYS[7 + d] : DAYS[d];
+
+  function render() {
+    document.querySelectorAll(&#x27;[data-action=&quot;mode&quot;]&#x27;).forEach(b =&gt; b.classList.toggle(&#x27;on&#x27;, b.dataset.mode === S.mode));
+    document.querySelectorAll(&#x27;[data-action=&quot;scenario&quot;]&#x27;).forEach(b =&gt; b.classList.toggle(&#x27;on&#x27;, b.dataset.scenario === S.scenario));
+    document.getElementById(&#x27;guide&#x27;).innerHTML = GUIDES[S.scenario];
+    document.getElementById(&#x27;btn-callout&#x27;).disabled = !!S.ping;
+    const skip = document.getElementById(&#x27;btn-skip&#x27;);
+    skip.disabled = !!S.ping || S.day &gt;= 6;
+    skip.textContent = S.day &gt;= 6 ? &#x27;End of the week&#x27; : `Skip to ${DAYS[S.day + 1]}`;
+    document.getElementById(&#x27;clock&#x27;).textContent = `${DAYS[S.day]} ${now()} · Eastgate`;
+    renderConsole();
+    renderPhone();
+    renderBackstage();
+  }
+
+  function place(who) {
+    if (who === &#x27;mite&#x27; &amp;&amp; S.away) return &#x27;Away tonight&#x27;;
+    if (who === &#x27;mite&#x27; &amp;&amp; S.checkin) return &#x27;Sitting out&#x27;;
+    const mine = S[who].score, other = S[who === &#x27;mite&#x27; ? &#x27;gale&#x27; : &#x27;mite&#x27;].score;
+    const otherOut = who === &#x27;gale&#x27; &amp;&amp; (S.away || S.checkin);
+    if (otherOut || mine &gt; other) return &#x27;1st of 2 in Eastgate&#x27;;
+    return mine === other ? &#x27;Tied for 1st in Eastgate&#x27; : &#x27;2nd of 2 in Eastgate&#x27;;
+  }
+
+  function miteWhy() {
+    const n = S.note;
+    if (S.away) return { tone: &#x27;&#x27;, text: `Away tonight. Mite said &quot;not tonight&quot; at ${n ? n.at.split(&#x27; &#x27;)[1] : &#x27;the check-in&#x27;}. Nothing counted against Mite.` };
+    if (S.checkin &amp;&amp; S.checkinWhy === &#x27;quiet&#x27;) return { tone: &#x27;accent&#x27;, text: `No pings in 5 days, so Mite was asked &quot;Still available?&quot;. Waiting for Mite&#x27;s answer.` };
+    if (S.checkin) return { tone: &#x27;accent&#x27;, text: `Missed 3 pings in a row, so Mite was asked &quot;Still available?&quot;. Sitting out until Mite answers. Missed pings don&#x27;t lower Mite&#x27;s place in line.` };
+    if (S.lateNos &gt; 0 &amp;&amp; S.mite.score &lt; S.gale.score) return { tone: &#x27;warn&#x27;, text: `${plural(S.lateNos, &#x27;late turn-down&#x27;)} lowered Mite&#x27;s place in line. A yes moves it back up.` };
+    const t = n ? n.at.split(&#x27; &#x27;)[1] : &#x27;&#x27;;
+    if (n &amp;&amp; n.kind === &#x27;back&#x27;) return { tone: &#x27;good&#x27;, text: `Mite confirmed &quot;I&#x27;m here&quot; at ${t}. Back in line.` };
+    if (n &amp;&amp; n.kind === &#x27;quick&#x27;) return { tone: &#x27;good&#x27;, text: `Said a quick no at ${t}, so that callout moved on sooner.` };
+    if (n &amp;&amp; n.kind === &#x27;late&#x27;) return { tone: &#x27;warn&#x27;, text: `Said no after the 40s window at ${t}. A late no lowers Mite&#x27;s place in line.` };
+    if (n &amp;&amp; n.kind === &#x27;taken&#x27;) return { tone: &#x27;good&#x27;, text: `Took a callout at ${t}.` };
+    if (S.missesTonight &gt; 0) return { tone: &#x27;&#x27;, text: `Missed ${plural(S.missesTonight, &#x27;ping&#x27;)} tonight. Missed pings don&#x27;t lower Mite&#x27;s place in line.` };
+    if (S.scenario === &#x27;launch&#x27; &amp;&amp; S.mite.score &lt; R.NEUTRAL) return { tone: &#x27;warn&#x27;, text: `Mite&#x27;s score is still low (${f2(S.mite.score)}) from pings missed before the fix. The fix stops new misses counting, but doesn&#x27;t undo old ones.` };
+    return null;
+  }
+
+  function miteFlag() {
+    const since = S.mite.lastPing;
+    if (!fix() || S.day - since.day &lt; 5) return &#x27;&#x27;;
+    let reason;
+    if (S.checkin &amp;&amp; S.checkinWhy === &#x27;quiet&#x27;) reason = `Mite&#x27;s phone has asked &quot;Still available?&quot;.`;
+    else if (S.checkin) reason = `Mite hasn&#x27;t answered &quot;Still available?&quot; yet, so Mite is sitting out.`;
+    else if (S.lateNos &gt; 0) reason = `${plural(S.lateNos, &#x27;late turn-down&#x27;)} lowered Mite&#x27;s place in line.`;
+    else if (S.scenario === &#x27;launch&#x27; &amp;&amp; S.mite.score &lt; R.NEUTRAL) reason = `Mite&#x27;s score is still low from pings missed before the fix, and nothing in the fix lifts it.`;
+    else reason = `The Gale has been ahead of Mite on most Eastgate callouts.`;
+    return `&lt;div class=&quot;flag&quot;&gt;${badge(3)}&lt;b&gt;Mite hasn&#x27;t been pinged since ${dayLabel(since.day)}.&lt;/b&gt;${reason}&lt;/div&gt;`;
+  }
+
+  function card(who) {
+    const r = S[who];
+    const isMite = who === &#x27;mite&#x27;;
+    const name = isMite ? &#x27;Meteor Mite&#x27; : &#x27;The Gale&#x27;;
+    let pill = &#x27;&lt;span class=&quot;pill&quot;&gt;Available&lt;/span&gt;&#x27;;
+    if (!free(who) &amp;&amp; !(isMite &amp;&amp; S.ping)) pill = &#x27;&lt;span class=&quot;pill ping&quot;&gt;On a callout&lt;/span&gt;&#x27;;
+    if (isMite &amp;&amp; S.ping) pill = &#x27;&lt;span class=&quot;pill ping&quot;&gt;Ping on phone&lt;/span&gt;&#x27;;
+    else if (isMite &amp;&amp; S.away) pill = &#x27;&lt;span class=&quot;pill away&quot;&gt;Away tonight&lt;/span&gt;&#x27;;
+    else if (isMite &amp;&amp; S.checkin) pill = &#x27;&lt;span class=&quot;pill paused&quot;&gt;Asked: still available?&lt;/span&gt;&#x27;;
+
+    let html = `&lt;div class=&quot;card ${who}&quot;&gt;
+      &lt;div class=&quot;card-top&quot;&gt;&lt;div&gt;&lt;h3&gt;${name}&lt;/h3&gt;&lt;div class=&quot;area&quot;&gt;Eastgate&lt;/div&gt;&lt;/div&gt;${pill}&lt;/div&gt;
+      &lt;div class=&quot;stat&quot;&gt;&lt;span&gt;Pings this week&lt;/span&gt;&lt;b&gt;${r.pings}${fix() ? ` &lt;span class=&quot;usual&quot;&gt;(usual: ${USUAL})&lt;/span&gt;` : &#x27;&#x27;}&lt;/b&gt;&lt;/div&gt;
+      &lt;div class=&quot;stat&quot;&gt;&lt;span&gt;Last ping&lt;/span&gt;&lt;b&gt;${dayLabel(r.lastPing.day)} ${r.lastPing.t}&lt;/b&gt;&lt;/div&gt;`;
+    if (fix()) html += `&lt;div class=&quot;stat&quot;&gt;&lt;span&gt;Place in line&lt;/span&gt;&lt;b&gt;${place(who)}&lt;/b&gt;&lt;/div&gt;` + spark(who);
+
+    if (fix()) {
+      if (isMite) {
+        const why = miteWhy();
+        if (why) html += `&lt;div class=&quot;why ${why.tone}&quot;&gt;${badge(3)}${why.text}&lt;/div&gt;`;
+        html += miteFlag();
+      } else if (S.galeCovered &gt; 0) {
+        html += `&lt;div class=&quot;why&quot;&gt;${badge(3)}Picked up ${plural(S.galeCovered, &#x27;callout&#x27;)} Mite missed or passed on.&lt;/div&gt;`;
+      }
+    }
+    return html + &#x27;&lt;/div&gt;&#x27;;
+  }
+
+  // A small line of one responder&#x27;s score since the start, so Kip sees a slide as it starts.
+  function spark(who) {
+    const pts = S.history.map(p =&gt; p[who]);
+    if (pts.length &lt; 2) return &#x27;&#x27;;
+    const W = 200, H = 34;
+    const x = i =&gt; i * W / (pts.length - 1), y = v =&gt; 2 + (1 - v) * (H - 4);
+    const line = pts.map((v, i) =&gt; `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(&#x27; &#x27;);
+    return `&lt;div class=&quot;spark&quot;&gt;
+      &lt;div class=&quot;spark-head&quot;&gt;&lt;span&gt;${badge(3)}Score since ${S.history[0].at.split(&#x27; &#x27;)[0]}&lt;/span&gt;&lt;b&gt;${f2(pts[0])} → ${f2(pts[pts.length - 1])}&lt;/b&gt;&lt;/div&gt;
+      &lt;svg viewBox=&quot;0 0 ${W} ${H}&quot; preserveAspectRatio=&quot;none&quot; aria-hidden=&quot;true&quot;&gt;
+        &lt;line x1=&quot;0&quot; x2=&quot;${W}&quot; y1=&quot;${y(R.NEUTRAL)}&quot; y2=&quot;${y(R.NEUTRAL)}&quot; style=&quot;stroke:#9a9a90&quot; stroke-width=&quot;1&quot; stroke-dasharray=&quot;3 3&quot; vector-effect=&quot;non-scaling-stroke&quot;/&gt;
+        &lt;polyline points=&quot;${line}&quot; fill=&quot;none&quot; style=&quot;stroke:var(--${who})&quot; stroke-width=&quot;2&quot; stroke-linejoin=&quot;round&quot; vector-effect=&quot;non-scaling-stroke&quot;/&gt;
+      &lt;/svg&gt;
+    &lt;/div&gt;`;
+  }
+
+  function renderConsole() {
+    document.getElementById(&#x27;console-note&#x27;).innerHTML = fix()
+      ? `${badge(3)}With the fix, each card says how this week compares with usual, and why.`
+      : &#x27;Roughly what Kip sees today: counts, but no reason and nothing to compare with.&#x27;;
+    document.getElementById(&#x27;cards&#x27;).innerHTML = card(&#x27;mite&#x27;) + card(&#x27;gale&#x27;);
+  }
+
+  function appHead() {
+    return `&lt;div class=&quot;app-head&quot;&gt;&lt;b&gt;Rook&lt;/b&gt;&lt;span&gt;${DAYS[S.day]} ${now()}&lt;/span&gt;&lt;/div&gt;`;
+  }
+
+  function renderPhone() {
+    const el = document.getElementById(&#x27;screen&#x27;);
+    let html = appHead();
+    if (S.phone === &#x27;ping&#x27; &amp;&amp; S.ping) {
+      const c = S.ping.c;
+      html += `&lt;div class=&quot;ping-card&quot;&gt;
+        &lt;div class=&quot;ping-kicker&quot;&gt;New callout · #${c.num}&lt;/div&gt;
+        &lt;h4&gt;${c.what}&lt;/h4&gt;
+        &lt;div class=&quot;ping-meta&quot;&gt;Eastgate · ${c.mite} min away&lt;/div&gt;
+        &lt;div class=&quot;count&quot;&gt;&lt;span class=&quot;left&quot; id=&quot;cd-left&quot;&gt;1:00&lt;/span&gt;&lt;span class=&quot;phase&quot; id=&quot;cd-phase&quot;&gt;&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;bar&quot;&gt;&lt;div class=&quot;fill&quot; id=&quot;cd-fill&quot; style=&quot;width:100%&quot;&gt;&lt;/div&gt;${fix() ? &#x27;&lt;div class=&quot;mark&quot;&gt;&lt;/div&gt;&#x27; : &#x27;&#x27;}&lt;/div&gt;
+        &lt;div class=&quot;bar-legend&quot;&gt;&lt;span&gt;moves on at 0:00&lt;/span&gt;${fix() ? &#x27;&lt;span&gt;green line: quick no ends&lt;/span&gt;&#x27; : &#x27;&#x27;}&lt;/div&gt;
+        &lt;div class=&quot;answer&quot;&gt;
+          &lt;button class=&quot;take&quot; data-action=&quot;take&quot;&gt;Take it&lt;/button&gt;
+          &lt;button class=&quot;decline&quot; data-action=&quot;decline&quot;&gt;${fix() ? &quot;Can&#x27;t make it&quot; : &#x27;Turn down&#x27;}&lt;/button&gt;
+        &lt;/div&gt;
+        ${fix() ? `&lt;div class=&quot;hint&quot;&gt;${badge(4)}Can&#x27;t make it? Tell us now and help gets there faster.&lt;/div&gt;` : &#x27;&#x27;}
+      &lt;/div&gt;
+      &lt;div class=&quot;runout&quot;&gt;&lt;button data-action=&quot;runout&quot;&gt;Presenter: let it run out&lt;/button&gt;&lt;/div&gt;`;
+    } else if (S.phone === &#x27;checkin&#x27;) {
+      html += `&lt;div class=&quot;checkin&quot;&gt;
+        ${S.checkinWhy === &#x27;quiet&#x27;
+          ? `&lt;h4&gt;${badge(2)}It&#x27;s been quiet.&lt;/h4&gt;
+        &lt;p&gt;No pings since ${dayLabel(S.mite.lastPing.day)}. You&#x27;re still on the list. Still available? Tap yes and we&#x27;ll move you back up.&lt;/p&gt;`
+          : `&lt;h4&gt;${badge(2)}Missed a few.&lt;/h4&gt;
+        &lt;p&gt;Still available tonight? Missed pings aren&#x27;t held against you.&lt;/p&gt;`}
+        &lt;div class=&quot;answer&quot;&gt;
+          &lt;button class=&quot;take&quot; data-action=&quot;ci-yes&quot;&gt;Yes, I&#x27;m here&lt;/button&gt;
+          &lt;button class=&quot;decline&quot; data-action=&quot;ci-no&quot;&gt;Not tonight&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;`;
+    } else if (S.phone === &#x27;away&#x27;) {
+      html += `&lt;div class=&quot;idle-mid&quot;&gt;&lt;h4&gt;Away tonight&lt;/h4&gt;&lt;p&gt;No pings until tomorrow.&lt;br&gt;Nothing is counted against you.&lt;/p&gt;&lt;/div&gt;
+      &lt;div class=&quot;answer&quot;&gt;&lt;button class=&quot;decline&quot; data-action=&quot;unaway&quot;&gt;Actually, I&#x27;m free&lt;/button&gt;&lt;/div&gt;`;
+    } else if (S.phone === &#x27;toast&#x27; &amp;&amp; S.toast) {
+      html += `&lt;div class=&quot;toast ${S.toast.tone}&quot;&gt;${S.toast.text}&lt;/div&gt;`;
+    } else {
+      const r = S.mite;
+      html += `&lt;div class=&quot;idle-mid&quot;&gt;&lt;span class=&quot;dot&quot;&gt;&lt;/span&gt;&lt;h4&gt;You&#x27;re available&lt;/h4&gt;&lt;p&gt;Waiting for a callout…&lt;/p&gt;&lt;/div&gt;
+      &lt;div class=&quot;idle-foot&quot;&gt;Pings this week: ${r.pings}&lt;br&gt;Last ping: ${dayLabel(r.lastPing.day)} ${r.lastPing.t}&lt;/div&gt;`;
+    }
+    el.innerHTML = html;
+    if (S.phone === &#x27;ping&#x27;) updateCountdown();
+  }
+
+  function updateCountdown() {
+    if (!S.ping) return;
+    const e = S.ping.elapsed;
+    const left = Math.max(0, Math.ceil(R.WAIT - e));
+    const l = document.getElementById(&#x27;cd-left&#x27;);
+    if (!l) return;
+    l.textContent = &#x27;0:&#x27; + String(left).padStart(2, &#x27;0&#x27;);
+    const fill = document.getElementById(&#x27;cd-fill&#x27;);
+    fill.style.width = (Math.max(0, R.WAIT - e) / R.WAIT * 100) + &#x27;%&#x27;;
+    const phase = document.getElementById(&#x27;cd-phase&#x27;);
+    if (fix()) {
+      const qLeft = Math.max(0, R.QUICK - e);
+      fill.style.background = qLeft &gt; 0 ? &#x27;var(--good)&#x27; : &#x27;var(--accent)&#x27;;
+      phase.textContent = qLeft &gt; 0 ? `Quick no: ${Math.ceil(qLeft)}s left` : &#x27;Quick-no window closed&#x27;;
+    } else {
+      phase.textContent = &#x27;then it moves on&#x27;;
+    }
+  }
+
+  function renderBackstage() {
+    const rules = fix()
+      ? [[&#x27;Yes +0.08&#x27;, false], [&#x27;Missed: no change&#x27;, true], [&#x27;Quick no (≤40s): +0.02, up to 0.50&#x27;, true], [&#x27;Late no: −0.12&#x27;, false], [&#x27;3 misses in a row → &quot;still available?&quot;&#x27;, true], [&#x27;Ping wait 60s&#x27;, false]]
+      : [[&#x27;Yes +0.08&#x27;, false], [&#x27;Turned down −0.12&#x27;, false], [&#x27;Missed −0.12 (same as a no)&#x27;, false], [&#x27;Only a yes earns points back&#x27;, false], [&#x27;Ping wait 60s&#x27;, false]];
+    document.getElementById(&#x27;rules&#x27;).innerHTML = rules.map(([t, c]) =&gt; `&lt;span class=&quot;rule ${c ? &#x27;changed&#x27; : &#x27;&#x27;}&quot;&gt;${t}&lt;/span&gt;`).join(&#x27;&#x27;);
+    const row = (label, v, color) =&gt; `&lt;div class=&quot;score-row&quot;&gt;&lt;span&gt;${label}&lt;/span&gt;&lt;div class=&quot;track&quot;&gt;&lt;div class=&quot;val&quot; style=&quot;width:${v * 100}%;background:${color}&quot;&gt;&lt;/div&gt;&lt;div class=&quot;neutral&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;b&gt;${f2(v)}&lt;/b&gt;&lt;/div&gt;`;
+    document.getElementById(&#x27;scores&#x27;).innerHTML =
+      row(&#x27;Meteor Mite&#x27;, S.mite.score, &#x27;var(--mite)&#x27;) + row(&#x27;The Gale&#x27;, S.gale.score, &#x27;var(--gale)&#x27;) +
+      (S.unfilled ? `&lt;div style=&quot;font-size:13px;color:var(--bad)&quot;&gt;Callouts nobody took: ${S.unfilled}&lt;/div&gt;` : &#x27;&#x27;);
+    document.getElementById(&#x27;log&#x27;).innerHTML = S.log.slice(0, 60)
+      .map(e =&gt; `&lt;li class=&quot;${e.tone}&quot;&gt;&lt;time&gt;${e.at}&lt;/time&gt;&lt;span&gt;${e.text}&lt;/span&gt;&lt;/li&gt;`).join(&#x27;&#x27;);
+    renderChart();
+    document.getElementById(&#x27;hist-table&#x27;).innerHTML = `&lt;table&gt;
+      &lt;tr&gt;&lt;th&gt;When&lt;/th&gt;&lt;th&gt;What happened&lt;/th&gt;&lt;th class=&quot;num&quot;&gt;Mite&lt;/th&gt;&lt;th class=&quot;num&quot;&gt;The Gale&lt;/th&gt;&lt;/tr&gt;
+      ${S.history.slice().reverse().map(p =&gt; `&lt;tr&gt;&lt;td&gt;${p.at}&lt;/td&gt;&lt;td&gt;${p.label}&lt;/td&gt;&lt;td class=&quot;num&quot;&gt;${f2(p.mite)}&lt;/td&gt;&lt;td class=&quot;num&quot;&gt;${f2(p.gale)}&lt;/td&gt;&lt;/tr&gt;`).join(&#x27;&#x27;)}
+    &lt;/table&gt;`;
+  }
+
+  /* ---------- Score history chart ---------- */
+
+  const CH = { W: 720, H: 220, l: 40, r: 92, t: 12, b: 30 };
+  const chX = (i, n) =&gt; CH.l + (n &lt;= 1 ? 0 : i * (CH.W - CH.l - CH.r) / (n - 1));
+  const chY = v =&gt; CH.t + (1 - v) * (CH.H - CH.t - CH.b);
+
+  function renderChart() {
+    const H = S.history, n = H.length, last = H[n - 1];
+    let s = `&lt;svg viewBox=&quot;0 0 ${CH.W} ${CH.H}&quot; role=&quot;img&quot; aria-label=&quot;Score history for Meteor Mite and The Gale&quot;&gt;`;
+    [0, 0.25, 0.5, 0.75, 1].forEach(v =&gt; {
+      const y = chY(v), mid = v === R.NEUTRAL;
+      s += `&lt;line x1=&quot;${CH.l}&quot; x2=&quot;${CH.W - CH.r}&quot; y1=&quot;${y}&quot; y2=&quot;${y}&quot; style=&quot;stroke:${mid ? &#x27;#9a9a90&#x27; : &#x27;#ececE6&#x27;}&quot; stroke-width=&quot;1&quot;${mid ? &#x27; stroke-dasharray=&quot;4 3&quot;&#x27; : &#x27;&#x27;}/&gt;`;
+      s += `&lt;text x=&quot;${CH.l - 8}&quot; y=&quot;${y + 4}&quot; text-anchor=&quot;end&quot; font-size=&quot;11&quot; style=&quot;fill:var(--muted)&quot;&gt;${v.toFixed(2)}&lt;/text&gt;`;
+    });
+    H.forEach((p, i) =&gt; {
+      if (i &gt; 0 &amp;&amp; p.day === H[i - 1].day) return;
+      const x = chX(i, n);
+      if (i &gt; 0) s += `&lt;line x1=&quot;${x}&quot; x2=&quot;${x}&quot; y1=&quot;${CH.t}&quot; y2=&quot;${CH.H - CH.b}&quot; style=&quot;stroke:var(--line)&quot; stroke-width=&quot;1&quot;/&gt;`;
+      s += `&lt;text x=&quot;${x + 4}&quot; y=&quot;${CH.H - 10}&quot; font-size=&quot;11&quot; style=&quot;fill:var(--muted)&quot;&gt;${DAYS[p.day]}&lt;/text&gt;`;
+    });
+    const path = k =&gt; H.map((p, i) =&gt; `${i ? &#x27;L&#x27; : &#x27;M&#x27;}${chX(i, n).toFixed(1)},${chY(p[k]).toFixed(1)}`).join(&#x27;&#x27;);
+    if (n &gt; 1) {
+      s += `&lt;path d=&quot;${path(&#x27;gale&#x27;)}&quot; fill=&quot;none&quot; style=&quot;stroke:var(--gale)&quot; stroke-width=&quot;2&quot; stroke-linejoin=&quot;round&quot;/&gt;`;
+      s += `&lt;path d=&quot;${path(&#x27;mite&#x27;)}&quot; fill=&quot;none&quot; style=&quot;stroke:var(--mite)&quot; stroke-width=&quot;2&quot; stroke-linejoin=&quot;round&quot;/&gt;`;
+    }
+    // End markers and direct labels, nudged apart when the two lines end close together.
+    let ym = chY(last.mite), yg = chY(last.gale);
+    if (Math.abs(ym - yg) &lt; 14) { const c = (ym + yg) / 2, up = ym &lt;= yg ? -7 : 7; ym = c + up; yg = c - up; }
+    const xe = chX(n - 1, n);
+    s += `&lt;circle cx=&quot;${xe}&quot; cy=&quot;${chY(last.gale)}&quot; r=&quot;4&quot; style=&quot;fill:var(--gale);stroke:#fff&quot; stroke-width=&quot;2&quot;/&gt;`;
+    s += `&lt;circle cx=&quot;${xe}&quot; cy=&quot;${chY(last.mite)}&quot; r=&quot;4&quot; style=&quot;fill:var(--mite);stroke:#fff&quot; stroke-width=&quot;2&quot;/&gt;`;
+    s += `&lt;text x=&quot;${xe + 10}&quot; y=&quot;${ym + 4}&quot; font-size=&quot;12&quot; style=&quot;fill:var(--ink)&quot;&gt;Mite ${f2(last.mite)}&lt;/text&gt;`;
+    s += `&lt;text x=&quot;${xe + 10}&quot; y=&quot;${yg + 4}&quot; font-size=&quot;12&quot; style=&quot;fill:var(--ink)&quot;&gt;The Gale ${f2(last.gale)}&lt;/text&gt;`;
+    // Hover layer
+    s += `&lt;line id=&quot;hx&quot; y1=&quot;${CH.t}&quot; y2=&quot;${CH.H - CH.b}&quot; style=&quot;stroke:var(--muted)&quot; stroke-width=&quot;1&quot; visibility=&quot;hidden&quot;/&gt;`;
+    s += `&lt;circle id=&quot;hm&quot; r=&quot;5&quot; style=&quot;fill:var(--mite);stroke:#fff&quot; stroke-width=&quot;2&quot; visibility=&quot;hidden&quot;/&gt;`;
+    s += `&lt;circle id=&quot;hg&quot; r=&quot;5&quot; style=&quot;fill:var(--gale);stroke:#fff&quot; stroke-width=&quot;2&quot; visibility=&quot;hidden&quot;/&gt;`;
+    document.getElementById(&#x27;chart&#x27;).innerHTML = s + &#x27;&lt;/svg&gt;&#x27;;
+  }
+
+  function chartHover(e) {
+    const svg = document.querySelector(&#x27;#chart svg&#x27;), H = S.history, n = H.length;
+    if (!svg || n &lt; 1) return;
+    const box = svg.getBoundingClientRect(), scale = CH.W / box.width;
+    const xv = (e.clientX - box.left) * scale;
+    const i = n &lt;= 1 ? 0 : Math.max(0, Math.min(n - 1, Math.round((xv - CH.l) / ((CH.W - CH.l - CH.r) / (n - 1)))));
+    const p = H[i], x = chX(i, n);
+    const hx = svg.querySelector(&#x27;#hx&#x27;), hm = svg.querySelector(&#x27;#hm&#x27;), hg = svg.querySelector(&#x27;#hg&#x27;);
+    hx.setAttribute(&#x27;x1&#x27;, x); hx.setAttribute(&#x27;x2&#x27;, x); hx.setAttribute(&#x27;visibility&#x27;, &#x27;visible&#x27;);
+    hm.setAttribute(&#x27;cx&#x27;, x); hm.setAttribute(&#x27;cy&#x27;, chY(p.mite)); hm.setAttribute(&#x27;visibility&#x27;, &#x27;visible&#x27;);
+    hg.setAttribute(&#x27;cx&#x27;, x); hg.setAttribute(&#x27;cy&#x27;, chY(p.gale)); hg.setAttribute(&#x27;visibility&#x27;, &#x27;visible&#x27;);
+    const tip = document.getElementById(&#x27;tip&#x27;);
+    tip.innerHTML = `&lt;b&gt;${p.at}&lt;/b&gt;&lt;br&gt;${p.label}&lt;br&gt;&lt;span class=&quot;dot&quot; style=&quot;background:var(--mite)&quot;&gt;&lt;/span&gt;Mite ${f2(p.mite)} &amp;nbsp; &lt;span class=&quot;dot&quot; style=&quot;background:var(--gale)&quot;&gt;&lt;/span&gt;The Gale ${f2(p.gale)}`;
+    tip.hidden = false;
+    const px = x / scale, wrapW = box.width;
+    tip.style.left = (px + 270 &gt; wrapW ? px - 262 : px + 12) + &#x27;px&#x27;;
+  }
+
+  function chartLeave() {
+    const svg = document.querySelector(&#x27;#chart svg&#x27;);
+    if (svg) [&#x27;#hx&#x27;, &#x27;#hm&#x27;, &#x27;#hg&#x27;].forEach(id =&gt; svg.querySelector(id).setAttribute(&#x27;visibility&#x27;, &#x27;hidden&#x27;));
+    document.getElementById(&#x27;tip&#x27;).hidden = true;
+  }
+
+  const wrap = document.getElementById(&#x27;chart-wrap&#x27;);
+  wrap.addEventListener(&#x27;mousemove&#x27;, chartHover);
+  wrap.addEventListener(&#x27;mouseleave&#x27;, chartLeave);
+
+  document.addEventListener(&#x27;click&#x27;, e =&gt; {
+    const b = e.target.closest(&#x27;[data-action]&#x27;);
+    if (!b || b.disabled) return;
+    const a = b.dataset.action;
+    if (a === &#x27;mode&#x27;) { if (b.dataset.mode !== S.mode) restart(b.dataset.mode, S.scenario); }
+    else if (a === &#x27;scenario&#x27;) { if (b.dataset.scenario !== S.scenario) restart(S.mode, b.dataset.scenario); }
+    else if (a === &#x27;callout&#x27;) newCallout();
+    else if (a === &#x27;skip&#x27;) skipDay();
+    else if (a === &#x27;restart&#x27;) restart();
+    else if (a === &#x27;take&#x27;) take();
+    else if (a === &#x27;decline&#x27;) decline();
+    else if (a === &#x27;runout&#x27;) miss();
+    else if (a === &#x27;ci-yes&#x27;) checkinYes();
+    else if (a === &#x27;ci-no&#x27;) checkinNo();
+    else if (a === &#x27;unaway&#x27;) backFromAway();
+  });
+
+  S = fresh(&#x27;today&#x27;, &#x27;before&#x27;);
+  restart(&#x27;today&#x27;, &#x27;before&#x27;);
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+" loading="lazy"></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 · The gate -->
+<section class="slide" data-title="The gate">
+  <div class="inner">
+    <div class="kicker"><span class="n">09</span>Keeping it from happening again</div>
+    <h2>A brief that reads well isn't a brief that ships safely.</h2>
+    <p class="lede">My <code>review-checklist</code> skill checks every brief the same way, and quotes the line behind each verdict. I added two checks for what actually broke 4.2. It runs on its own every Monday at 08:12.</p>
+    <div class="checks">
+      <div class="check"><span class="n">1</span><b>Owner named</b>A person, not a role.</div>
+      <div class="check"><span class="n">2</span><b>Success measure</b>Something you can count.</div>
+      <div class="check"><span class="n">3</span><b>Scope stays bounded</b>Same ask, start to end.</div>
+      <div class="check"><span class="n">4</span><b>Problem before fix</b>Who has it, first.</div>
+      <div class="check"><span class="n">5</span><b>Evidence</b>A number or quote, with its source.</div>
+      <div class="check"><span class="n">6</span><b>A specific person</b>A real user, and what changes for them.</div>
+      <div class="check new"><span class="n">7 · NEW</span><b>System health</b>Loops have a brake. Load guarded at both ends. Everyone has a way back.</div>
+      <div class="check new"><span class="n">8 · NEW</span><b>Tested before, watched after</b>Old → new values, a replay or staged rollout, a rollback trigger, a named person on week one.</div>
+    </div>
+    <div class="tw">
+      <table class="results">
+        <thead><tr><th>Brief</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>Flags</th></tr></thead>
+        <tbody>
+          <tr><td>4.2 · "Change to who gets pinged"</td><td class="ok">✓</td><td class="fl">✕</td><td class="ok">✓</td><td class="fl">✕</td><td class="fl">✕</td><td class="fl">✕</td><td class="fl">✕</td><td class="fl">✕</td><td><b>6</b></td></tr>
+          <tr><td>4.2 · "Ping timeout tuning"</td><td class="ok">✓</td><td class="fl">✕</td><td class="ok">✓</td><td class="fl">✕</td><td class="fl">✕</td><td class="fl">✕</td><td class="fl">✕</td><td class="fl">✕</td><td><b>6</b></td></tr>
+          <tr><td>My Module 5 brief</td><td class="fl">✕</td><td class="ok">✓</td><td class="fl">✕</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="fl">✕</td><td class="fl">✕</td><td><b>4</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="source">The two 4.2 items were one-line roadmap rows with no real brief. My own brief passes the writing checks and fails 7 and 8: no ceiling for The Gale's load, no rollback trigger, nobody watching week one. The plan on the next slide closes all four of its flags.</p>
+  </div>
+</section>
+
+<!-- 11 · The plan -->
+<section class="slide" data-title="The plan">
+  <div class="inner">
+    <div class="kicker"><span class="n">10</span>The plan · owners, guardrails, a way out</div>
+    <h2>Ship it the way 4.2 should have shipped.</h2>
+    <div class="grid g3">
+      <div class="lane now">
+        <h3>Now <small>next 2 weeks</small></h3>
+        <ul>
+          <li>"A miss isn't a no" and the 5-day check-in, behind a flag, in Eastgate and one more area <span class="owner">Wen · Marcus</span></li>
+          <li>Kip's card: usual pings, reason, warning, score line <span class="owner">Sofia</span></li>
+          <li>Per-responder dashboard: idle 5+ days, above 1.5× usual <span class="owner">Ravi</span></li>
+          <li>Brief owner, and a daily look at week one <span class="owner">Dispatch PM (me)</span></li>
+        </ul>
+      </div>
+      <div class="lane next">
+        <h3>Next <small>this quarter</small></h3>
+        <ul>
+          <li>Tracking epic: answer time, capability tags, score history, overrides. No more. <span class="owner">Wen · Ravi</span></li>
+          <li>Then test a 75s wait and the quick-no boost, by area <span class="owner">me</span></li>
+          <li>Written spec of who gets pinged, and why Vesper lost Old Town on day one <span class="owner">Wen</span></li>
+          <li>Checks 7 and 8 become a release gate <span class="owner">me · Helen</span></li>
+        </ul>
+      </div>
+      <div class="lane later">
+        <h3>Later <small>after the fix holds</small></h3>
+        <ul>
+          <li>Quick fixes: feed jumping to the top, sign-outs, a warning when filters reset</li>
+          <li>Handler alert when a callout comes in (3 of 4 interviews)</li>
+          <li>Dark mode, the end-of-season "one more thing" (Kip is the fan club president)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="guard">
+      <div class="card"><b>North star</b><p>Share of callouts with a yes within X minutes. Until answer time is tracked: callouts nobody took, back to ≤ 5.5%.</p></div>
+      <div class="card"><b>Guardrails, both ends</b><p>No available responder idle for 5+ days. Nobody above 1.5× their usual pings for a week.</p></div>
+      <div class="card"><b>Rollback trigger (proposed)</b><p>Callouts nobody took above 8% for 3 days in a test area, or a guardrail broken for a week: the flag goes off.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 · Closing -->
+<section class="slide closing" data-title="What I learned">
+  <div class="inner">
+    <div class="kicker">What I'm taking away</div>
+    <h2>The system didn't need a hero. It needed a brake, a guardrail and someone watching.</h2>
+    <div class="grid g3" style="margin-top:10px">
+      <div class="lesson"><div class="m">M1 · Onboard</div><p>Brief Claude once in CLAUDE.md, and it knows the job every session.</p></div>
+      <div class="lesson"><div class="m">M2 · Listen</div><p>Ask for a count, a grouping and a quote. Interviews and tickets were different people.</p></div>
+      <div class="lesson"><div class="m">M3 · Verify</div><p>See the rows, then check the number a second way. The average hid four people.</p></div>
+      <div class="lesson"><div class="m">M4 · Inspect</div><p>Ask what the code does, then what it doesn't. Nothing gave points back.</p></div>
+      <div class="lesson"><div class="m">M5 · Prototype</div><p>Brief first, then build, then argue with it. My pushback made the model honest.</p></div>
+      <div class="lesson"><div class="m">M6 · Automate</div><p>Write the check once. Let it run every Monday, whether I'm in the room or not.</p></div>
+    </div>
+    <p class="lede" style="margin-top:28px">All six prompts.md files form a prompt library built from my own questions. The repo has every artifact behind this report.</p>
+  </div>
+</section>
+
+<script>
+  const DATA = {"weeks": {"labels": ["1 Jul", "8 Jul", "15 Jul", "22 Jul", "29 Jul", "5 Aug", "12 Aug", "19 Aug", "26 Aug"], "missed": [2.7, 2.6, 1.7, 3.2, 2.0, 1.6, 22.9, 22.4, 12.9], "nobody": [6.5, 5.5, 5.3, 6.8, 4.9, 4.1, 12.0, 19.0, 6.7], "quiet": [12.8, 11.5, 12.5, 13.5, 10.5, 12.8, 9.0, 3.0, 1.5], "other": [11.2, 9.2, 10.2, 11.0, 9.2, 11.2, 11.6, 11.7, 13.1]}, "days": {"labels": ["29 Jun", "30 Jun", "1 Jul", "2 Jul", "3 Jul", "4 Jul", "5 Jul", "6 Jul", "7 Jul", "8 Jul", "9 Jul", "10 Jul", "11 Jul", "12 Jul", "13 Jul", "14 Jul", "15 Jul", "16 Jul", "17 Jul", "18 Jul", "19 Jul", "20 Jul", "21 Jul", "22 Jul", "23 Jul", "24 Jul", "25 Jul", "26 Jul", "27 Jul", "28 Jul", "29 Jul", "30 Jul", "31 Jul", "1 Aug", "2 Aug", "3 Aug", "4 Aug", "5 Aug", "6 Aug", "7 Aug", "8 Aug", "9 Aug", "10 Aug", "11 Aug", "12 Aug", "13 Aug", "14 Aug", "15 Aug", "16 Aug", "17 Aug", "18 Aug", "19 Aug", "20 Aug", "21 Aug", "22 Aug", "23 Aug", "24 Aug", "25 Aug", "26 Aug", "27 Aug", "28 Aug", "29 Aug", "30 Aug", "31 Aug", "1 Sep", "2 Sep", "3 Sep", "4 Sep", "5 Sep", "6 Sep"], "mite": [0.5, 0.5, 0.46, 0.62, 0.7, 0.42, 0.58, 0.66, 0.9, 1, 1, 0.96, 0.84, 0.88, 0.92, 0.8, 0.88, 0.88, 0.96, 0.96, 0.76, 0.92, 0.92, 0.92, 0.84, 0.68, 0.84, 0.84, 1, 0.96, 0.96, 0.96, 0.96, 1, 0.88, 0.96, 1, 0.96, 0.88, 0.88, 1, 1, 0.96, 1, 0.88, 0.64, 0.52, 0.68, 0.56, 0.56, 0.44, 0.52, 0.4, 0.4, 0.28, 0.28, 0.28, 0.28, 0.28, 0.16, 0.16, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0, 0], "gale": [0.82, 0.7, 0.78, 0.86, 1, 0.88, 0.84, 0.88, 0.84, 0.8, 0.8, 0.8, 0.88, 1, 0.88, 0.96, 0.92, 1, 0.88, 0.96, 0.96, 0.96, 0.92, 0.96, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.84, 0.88, 1, 1, 0.76, 0.76, 0.76, 1, 1, 0.96, 0.84, 0.8, 0.92, 0.8, 0.84, 1, 0.88, 0.76, 0.64, 0.8, 0.84, 1.0, 0.76, 0.8, 0.96, 0.96, 1, 1, 1.0, 0.76, 0.88, 0.96, 0.88, 1, 0.96, 0.96]}};
+
+  /* ---------- Charts (hand-built SVG: one axis, thin marks, legend + direct labels, hover) ---------- */
+
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+  function frame(el, title, legendItems, source) {
+    el.innerHTML = `<div class="chart-title"><b>${title}</b><span class="legend">${legendItems.map(l =>
+      `<span><span class="sw" style="background:${l.color}${l.dash ? ';background:repeating-linear-gradient(90deg,' + l.color + ' 0 4px,transparent 4px 7px)' : ''}"></span>${esc(l.name)}</span>`).join('')}</span></div>
+      <div class="plot"></div><div class="tip" hidden></div>${source ? `<div class="source">${source}</div>` : ''}`;
+    return { plot: el.querySelector('.plot'), tip: el.querySelector('.tip') };
+  }
+
+  function tableView(el, head, rows) {
+    const d = document.createElement('details');
+    d.className = 'table';
+    d.innerHTML = `<summary>Show as a table</summary><table><tr>${head.map((h, i) => `<th class="${i ? 'num' : ''}">${h}</th>`).join('')}</tr>${rows.map(r =>
+      `<tr>${r.map((c, i) => `<td class="${i ? 'num' : ''}">${c}</td>`).join('')}</tr>`).join('')}</table>`;
+    el.appendChild(d);
+  }
+
+  function lineChart(el, cfg) {
+    const { plot, tip } = frame(el, cfg.title, cfg.series.map(s => ({ name: s.name, color: s.color })), cfg.source);
+    const W = cfg.width || 760, H = cfg.height || 300, m = { l: 46, r: 132, t: 22, b: 34 };
+    const n = cfg.labels.length, iw = W - m.l - m.r, ih = H - m.t - m.b;
+    const x = i => m.l + (n <= 1 ? 0 : i * iw / (n - 1));
+    const y = v => m.t + (1 - (v - cfg.yMin) / (cfg.yMax - cfg.yMin)) * ih;
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(cfg.title)}">`;
+    cfg.yTicks.forEach(v => {
+      s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="#ecebe5" stroke-width="1"/>`;
+      s += `<text x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end" font-size="11.5" fill="#6b7280">${cfg.fmtTick(v)}</text>`;
+    });
+    cfg.labels.forEach((lab, i) => {
+      if (i % (cfg.xEvery || 1) === 0) s += `<text x="${x(i)}" y="${H - 10}" text-anchor="middle" font-size="11.5" fill="#6b7280">${esc(lab)}</text>`;
+    });
+    if (cfg.refLine) {
+      const ry = y(cfg.refLine.value);
+      s += `<line x1="${m.l}" x2="${W - m.r}" y1="${ry}" y2="${ry}" stroke="#9a9a90" stroke-width="1" stroke-dasharray="4 3"/>`;
+      s += `<text x="${m.l + 4}" y="${ry - 5}" font-size="11.5" fill="#6b7280">${esc(cfg.refLine.label)}</text>`;
+    }
+    if (cfg.marker != null) {
+      const mx = x(cfg.marker.at);
+      s += `<line x1="${mx}" x2="${mx}" y1="${m.t - 6}" y2="${H - m.b}" stroke="#15171c" stroke-width="1" stroke-dasharray="3 3"/>`;
+      s += `<text x="${mx + 6}" y="${m.t + 4}" font-size="12" font-weight="700" fill="#15171c">${esc(cfg.marker.label)}</text>`;
+    }
+    cfg.series.forEach(se => {
+      const d = se.values.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('');
+      s += `<path d="${d}" fill="none" stroke="${se.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    });
+    // Direct labels at the line ends, nudged apart.
+    const ends = cfg.series.map(se => ({ se, yy: y(se.values[n - 1]) })).sort((a, b) => a.yy - b.yy);
+    for (let i = 1; i < ends.length; i++) if (ends[i].yy - ends[i - 1].yy < 16) ends[i].yy = ends[i - 1].yy + 16;
+    ends.forEach(e => {
+      const v = e.se.values[n - 1];
+      s += `<circle cx="${x(n - 1)}" cy="${y(v)}" r="4.5" fill="${e.se.color}" stroke="#fff" stroke-width="2"/>`;
+      s += `<text x="${x(n - 1) + 10}" y="${e.yy + 4}" font-size="12.5" fill="#15171c"><tspan font-weight="700">${cfg.fmt(v)}</tspan> ${esc(e.se.short || e.se.name)}</text>`;
+    });
+    s += `<line class="hx" y1="${m.t}" y2="${H - m.b}" stroke="#6b7280" stroke-width="1" visibility="hidden"/>`;
+    cfg.series.forEach((se, k) => s += `<circle class="hp hp${k}" r="5" fill="${se.color}" stroke="#fff" stroke-width="2" visibility="hidden"/>`);
+    s += `<rect x="${m.l - 10}" y="${m.t}" width="${iw + 20}" height="${ih}" fill="transparent" class="hit"/></svg>`;
+    plot.innerHTML = s;
+    const svg = plot.querySelector('svg'), hx = svg.querySelector('.hx');
+    const move = ev => {
+      const b = svg.getBoundingClientRect(), sc = W / b.width;
+      const i = Math.max(0, Math.min(n - 1, Math.round(((ev.clientX - b.left) * sc - m.l) / (iw / (n - 1)))));
+      hx.setAttribute('x1', x(i)); hx.setAttribute('x2', x(i)); hx.setAttribute('visibility', 'visible');
+      cfg.series.forEach((se, k) => { const c = svg.querySelector('.hp' + k); c.setAttribute('cx', x(i)); c.setAttribute('cy', y(se.values[i])); c.setAttribute('visibility', 'visible'); });
+      tip.innerHTML = `<b>${esc(cfg.tipLabel ? cfg.tipLabel(i) : cfg.labels[i])}</b>` + cfg.series.map(se =>
+        `<br><span class="dot" style="background:${se.color}"></span>${esc(se.name)}: <b>${cfg.fmt(se.values[i])}</b>`).join('');
+      tip.hidden = false;
+      const px = x(i) / sc + 18, wrap = el.getBoundingClientRect().width;
+      tip.style.left = Math.max(4, Math.min(px + 230 > wrap ? px - 250 : px, wrap - 236)) + 'px';
+      tip.style.top = '52px';
+    };
+    svg.addEventListener('mousemove', move);
+    svg.addEventListener('mouseleave', () => { hx.setAttribute('visibility', 'hidden'); svg.querySelectorAll('.hp').forEach(c => c.setAttribute('visibility', 'hidden')); tip.hidden = true; });
+    tableView(el, ['', ...cfg.series.map(se => esc(se.name))], cfg.labels.map((l, i) => [esc(cfg.tipLabel ? cfg.tipLabel(i) : l), ...cfg.series.map(se => cfg.fmt(se.values[i]))]));
+  }
+
+  function barChart(el, cfg) {
+    const { plot, tip } = frame(el, cfg.title, [], cfg.source);
+    const W = 760, rowH = 58, m = { l: 210, r: 70, t: 8, b: 30 }, H = m.t + m.b + rowH * cfg.rows.length;
+    const iw = W - m.l - m.r, x = v => m.l + v / cfg.max * iw;
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(cfg.title)}">`;
+    cfg.ticks.forEach(v => {
+      s += `<line x1="${x(v)}" x2="${x(v)}" y1="${m.t}" y2="${H - m.b}" stroke="#ecebe5"/>`;
+      s += `<text x="${x(v)}" y="${H - 10}" text-anchor="middle" font-size="11.5" fill="#6b7280">${v} min</text>`;
+    });
+    cfg.rows.forEach((r, i) => {
+      const yy = m.t + i * rowH + 14, bh = 22;
+      s += `<text x="${m.l - 12}" y="${yy + 10}" text-anchor="end" font-size="13.5" font-weight="${r.pick ? 700 : 500}" fill="#15171c">${esc(r.name)}</text>`;
+      s += `<text x="${m.l - 12}" y="${yy + 27}" text-anchor="end" font-size="11.5" fill="#6b7280">score ${esc(r.score)}</text>`;
+      s += `<path d="M${m.l},${yy} H${x(r.value) - 4} a4,4 0 0 1 4,4 V${yy + bh - 4} a4,4 0 0 1 -4,4 H${m.l} Z" fill="${r.pick ? cfg.pickColor : cfg.color}"/>`;
+      s += `<text x="${x(r.value) + 8}" y="${yy + 16}" font-size="13" font-weight="700" fill="#15171c">${r.value} min</text>`;
+      s += `<rect x="0" y="${yy - 10}" width="${W}" height="${rowH - 6}" fill="transparent" data-i="${i}" class="hit"/>`;
+    });
+    s += '</svg>';
+    plot.innerHTML = s;
+    const svg = plot.querySelector('svg');
+    svg.querySelectorAll('.hit').forEach(h => {
+      h.addEventListener('mousemove', ev => {
+        const r = cfg.rows[+h.dataset.i], b = el.getBoundingClientRect();
+        tip.innerHTML = `<b>${esc(r.name)}</b><br>Quiet four's score: ${esc(r.score)}<br>Must be <b>${r.value} min</b> closer than a typical rival to win a callout.`;
+        tip.hidden = false;
+        tip.style.left = Math.min(ev.clientX - b.left + 14, b.width - 250) + 'px';
+        tip.style.top = (ev.clientY - b.top + 14) + 'px';
+      });
+      h.addEventListener('mouseleave', () => tip.hidden = true);
+    });
+    tableView(el, ['Rule', 'Quiet four score', 'Minutes behind'], cfg.rows.map(r => [esc(r.name), esc(r.score), r.value + ' min']));
+  }
+
+  const pct = v => v.toFixed(1) + '%';
+  const W8 = DATA.weeks.labels.indexOf('12 Aug');
+
+  lineChart(document.getElementById('chart-coverage'), {
+    title: 'Weekly: pings missed vs callouts nobody took',
+    labels: DATA.weeks.labels, tipLabel: i => 'Week of ' + DATA.weeks.labels[i],
+    series: [
+      { name: 'Pings missed', short: 'missed', color: '#eda100', values: DATA.weeks.missed },
+      { name: 'Callouts nobody took', short: 'nobody took', color: '#1baf7a', values: DATA.weeks.nobody }
+    ],
+    yMin: 0, yMax: 25, yTicks: [0, 5, 10, 15, 20, 25], fmtTick: v => v + '%', fmt: pct,
+    marker: { at: W8, label: '4.2 ships' }, width: 1200, height: 250,
+    source: 'Source: rook-database pings and callouts, full weeks starting Wednesday, 1 Jul – 26 Aug.'
+  });
+
+  lineChart(document.getElementById('chart-load'), {
+    title: 'Pings per responder, per week',
+    labels: DATA.weeks.labels, tipLabel: i => 'Week of ' + DATA.weeks.labels[i],
+    series: [
+      { name: 'Other twelve (average)', short: 'other twelve', color: '#2a78d6', values: DATA.weeks.other },
+      { name: 'Quiet four (average)', short: 'quiet four', color: '#eb6834', values: DATA.weeks.quiet }
+    ],
+    yMin: 0, yMax: 15, yTicks: [0, 5, 10, 15], fmtTick: v => v, fmt: v => v.toFixed(1),
+    marker: { at: W8, label: '4.2 ships' },
+    source: 'Source: 03-rewind/pings-used.csv (all 1,696 pings, checked against the database).'
+  });
+
+  lineChart(document.getElementById('chart-score'), {
+    title: 'Recent-acceptance score, replayed from every ping',
+    labels: DATA.days.labels, xEvery: 7, tipLabel: i => DATA.days.labels[i],
+    series: [
+      { name: 'The Gale', color: '#2a78d6', values: DATA.days.gale },
+      { name: 'Meteor Mite', short: 'Mite', color: '#eb6834', values: DATA.days.mite }
+    ],
+    yMin: 0, yMax: 1, yTicks: [0, 0.25, 0.5, 0.75, 1], fmtTick: v => v.toFixed(2), fmt: v => v.toFixed(2),
+    refLine: { value: 0.5, label: 'neutral 0.50' },
+    marker: { at: DATA.days.labels.indexOf('12 Aug'), label: '4.2' },
+    source: 'Replayed with the code\'s own rules (+0.08 a yes, −0.12 a no or a miss, from 0.50). End-of-day values.'
+  });
+
+  barChart(document.getElementById('chart-whatif'), {
+    title: 'How much closer a quiet responder must be to win a callout (6 Sep)',
+    color: '#98a2b3', pickColor: '#137a4b', max: 20, ticks: [0, 5, 10, 15, 20],
+    rows: [
+      { name: "Today's rules", score: '0.00', value: 18 },
+      { name: 'Score recovers over time', score: '0.23–0.35', value: 10 },
+      { name: 'Both changes', score: '≈ 0.50', value: 8 },
+      { name: "A miss isn't a no", score: '0.76–0.84', value: 3, pick: true }
+    ],
+    source: 'What-if replays from Module 4: same pings, different rules, compared with the other twelve\'s median score.'
+  });
+
+  /* ---------- Deck navigation ---------- */
+  const slides = [...document.querySelectorAll('.slide')];
+  const dots = document.getElementById('dots'), counter = document.getElementById('counter'), progress = document.getElementById('progress');
+  slides.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.title = s.dataset.title; b.setAttribute('aria-label', 'Go to ' + s.dataset.title);
+    b.onclick = () => s.scrollIntoView({ behavior: 'smooth' });
+    dots.appendChild(b);
+  });
+  function current() {
+    const mid = window.innerHeight / 3;
+    let idx = 0;
+    slides.forEach((s, i) => { if (s.getBoundingClientRect().top <= mid) idx = i; });
+    return idx;
+  }
+  function update() {
+    const i = current();
+    [...dots.children].forEach((d, k) => d.classList.toggle('on', k === i));
+    counter.textContent = `${i + 1} / ${slides.length} · ${slides[i].dataset.title}`;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    progress.style.width = (max > 0 ? window.scrollY / max * 100 : 0) + '%';
+  }
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  document.addEventListener('keydown', e => {
+    if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+    const i = current();
+    if (['ArrowDown', 'PageDown'].includes(e.key) || (e.key === ' ' && !e.shiftKey)) { e.preventDefault(); slides[Math.min(slides.length - 1, i + 1)].scrollIntoView({ behavior: 'smooth' }); }
+    if (['ArrowUp', 'PageUp'].includes(e.key) || (e.key === ' ' && e.shiftKey)) { e.preventDefault(); slides[Math.max(0, i - 1)].scrollIntoView({ behavior: 'smooth' }); }
+  });
+  update();
+</script>
+</body>
+</html>
