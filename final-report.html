@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Release 4.2 Final Report</title>
+<link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
@@ -1310,7 +1311,7 @@
 &lt;/script&gt;
 &lt;script&gt;
   (function () {
-    const post = () =&gt; parent.postMessage({ protoHeight: document.documentElement.scrollHeight }, &#x27;*&#x27;);
+    const post = () =&gt; parent.postMessage({ protoHeight: Math.ceil(document.body.getBoundingClientRect().height) + 2 }, &#x27;*&#x27;);
     new ResizeObserver(post).observe(document.body);
     addEventListener(&#x27;load&#x27;, post);
   })();
