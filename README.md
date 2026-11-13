@@ -4,6 +4,18 @@ This is the course workspace for Product School's "Claude Code for PMs"
 certification, cohort ccpm-2026.1. Everything about Rook Industries in
 this workspace is a fictional teaching scenario — it's not a real company.
 
+## Final report
+
+**▶ View it live: https://johnostrowski.github.io/claude-code-for-pms-final/final-report.html**
+
+Or download [`final-report.html`](final-report.html) and open it in any browser
+(Chrome, Safari or Edge). It's one self-contained file: the comic, the charts
+and the live prototype are all inside it. GitHub's own file view shows the
+code, not the page, so use the live link or the download.
+
+Presenting: use ↑ ↓ to move between slides, **N** for speaker notes and a
+5-minute timer, and **A** to jump to the appendix.
+
 ## Getting started
 
 1. Paste the course setup prompt (the one-line prompt in your pre-class

@@ -1,0 +1,134 @@
+Started: 2026-11-11 (scheduled run "rook-review-checklist-monday", no brief named)
+
+Sources read: rook-wiki "Product briefs" page and its 4 child pages (Bulk Callout,
+Handler Phone App, Requisition Approval Chains, Routing Override Audit Log), plus
+05-super-speed/brief.md. rook-wiki connector was available. None of the wiki pages
+returned any comments. No brief was edited.
+
+Bulk Callout (wiki, 12 Jan 2026)
+  owner named ................... NO — flagged
+  success measure ............... yes
+  scope stays bounded ........... yes
+  problem stated before fix ..... yes
+  claims backed by evidence ..... NO — flagged
+  specific person it's for ...... NO — flagged
+  system health ................. NO — flagged
+  tested before, watched after .. NO — flagged
+  -> 5 flag(s):
+     1 owner: "nobody's picked it up yet" and "whoever picks it up next quarter".
+     2 evidence: the only support is "Halloran mentioned it too" — no number, count or quote.
+     3 person: "a handler managing more than one responder, or covering for another handler" is
+       generic; no named handler or responder.
+     4 system health: "no change to how any individual responder's callout is scored or ranked"
+       ignores that several simultaneous accepts/declines still feed scores and load; no guardrail
+       at either end of the pool.
+     5 tested/watched: "we don't have a clean baseline for it yet"; no test, rollout, rollback
+       trigger or watcher.
+  Passes: success measure "Fewer support tickets mentioning a handler who 'just started calling
+  people directly'" (countable, though no target); scope "Only the existing callout flow, sent to
+  more than one responder."; problem section precedes "Proposal".
+
+Handler Phone App (wiki, 8 Sep 2026)
+  owner named ................... NO — flagged
+  success measure ............... yes
+  scope stays bounded ........... yes
+  problem stated before fix ..... NO — flagged
+  claims backed by evidence ..... yes
+  specific person it's for ...... yes (Aunt Dot, handler)
+  system health ................. NO — flagged
+  tested before, watched after .. NO — flagged
+  -> 4 flag(s):
+     1 owner: "The product designer, exploring for Q4 ... Not yet staffed for a build." — a role,
+       no name, no build owner.
+     2 problem before fix: the page opens with "## Proposal — We should build a phone app for
+       handlers"; "What this solves" comes after.
+     3 system health: notifications "the moment something changes" with no word on alert volume
+       or fatigue, and the measure has "No baseline number yet".
+     4 tested/watched: nothing on a trial, staged rollout, rollback trigger or a person watching.
+  Passes: measure "Fewer handlers reporting they missed a status change because they weren't at
+  the console" (countable; no baseline); scope "Just the three things above"; evidence quote from
+  Aunt Dot: "maybe something that tells me too, not just him, when something's come in" (a single
+  interview); person: Aunt Dot.
+
+Requisition Approval Chains (wiki, 14 Jul 2026)
+  owner named ................... yes (The Rook Supply team)
+  success measure ............... yes
+  scope stays bounded ........... NO — flagged
+  problem stated before fix ..... yes
+  claims backed by evidence ..... NO — flagged
+  specific person it's for ...... yes (Halloran)
+  system health ................. NO — flagged
+  tested before, watched after .. NO — flagged
+  -> 4 flag(s):
+     1 scope: "That's the whole ask." is followed by "And while we're building the approval step,
+       we should also let a quartermaster route around a slow approver ... add a dashboard ...
+       let a handler see where their own requisition is stuck ... replace the weekly gear-cage
+       spreadsheet".
+     2 evidence: "Halloran's asked more than once for a second set of eyes" — no count, ticket or
+       date.
+     3 system health: a second sign-off adds load on managers and "route around a slow approver
+       if they haven't responded in 48 hours" is a bypass with no brake or limit.
+     4 tested/watched: "How much of the above ships together versus in phases — TBD."; several
+       changes bundled, no test, rollback trigger or watcher.
+  Passes: owner "The Rook Supply team." (a team, no individual); measure "Fewer requisitions over
+  $2,000 that ship without a second sign-off ... that number is zero."; problem precedes
+  "Proposal"; person: Halloran.
+
+Routing Override Audit Log (wiki, 5 Mar 2026)
+  owner named ................... yes (the engineering manager's team)
+  success measure ............... NO — flagged
+  scope stays bounded ........... yes
+  problem stated before fix ..... yes
+  claims backed by evidence ..... NO — flagged
+  specific person it's for ...... NO — flagged
+  system health ................. yes
+  tested before, watched after .. NO — flagged
+  -> 4 flag(s):
+     1 success measure: there is no measure section; "Small, contained, ready to build." says
+       nothing about how we'd know it worked.
+     2 evidence: "The support lead's team has hit this more than once" — no count or ticket.
+     3 person: "a handler manually overrides" and "a responder who was passed over" are generic;
+       no named user.
+     4 tested/watched: no test, rollback trigger or named person watching the first week.
+  Passes: owner "The engineering manager's team builds it." (team, not a named person);
+  scope "Overrides only. Not a general audit log for every action"; system health: read-only
+  logging ("Log every manual override"), changes no score or ranking.
+
+05-super-speed/brief.md (31 Oct 2026)
+  owner named ................... NO — flagged
+  success measure ............... yes
+  scope stays bounded ........... NO — flagged
+  problem stated before fix ..... yes
+  claims backed by evidence ..... yes
+  specific person it's for ...... yes (Meteor Mite / Kip)
+  system health ................. NO — flagged
+  tested before, watched after .. NO — flagged
+  -> 4 flag(s):
+     1 owner: byline is "From: Dispatch PM"; the "still missing" list assigns Wen, Sofia and Ravi
+       tasks but names no owner for the work.
+     2 scope: it opens on getting quiet responders back, then item 4 adds a quick-no reward that
+       "can't run until" answer-time tracking exists ("we don't record how fast a ping is
+       answered today").
+     3 system health: the problem notes The Gale "got 15–20" pings, but the guardrail is only
+       "no available responder goes 5+ days without a ping" — no ceiling for overloaded
+       responders.
+     4 tested/watched: has a replay ("In the replay, this one rule keeps all four above 0.76")
+       and a staged rollout ("by area or by week"), but no rollback trigger and no named person
+       watching week one; four changes are bundled.
+  Passes: measure "share of callouts with a yes within X minutes" (X still undecided) plus the
+  5-day guardrail; problem first ("The problem, for one person"); evidence "Mite's score fell
+  from 1.00 on 11 Aug to 0.04 on 29 Aug" and "51 pings a week to 6"; person: Meteor Mite and Kip.
+
+5 briefs checked, 5 flagged, 21 flags in total.
+
+SUMMARY
+- Most work: Bulk Callout (5 flags). Its wiki page says nobody has picked it up.
+- Best single fix per brief:
+  * Bulk Callout: name an owner who will also get the missing baseline.
+  * Handler Phone App: name a build owner (the page says it isn't staffed) and lead with the problem.
+  * Requisition Approval Chains: cut it back to the single second-approval step; move the extras
+    into their own briefs.
+  * Routing Override Audit Log: add a success measure, e.g. share of passed-over complaints that
+    can be traced to an override.
+  * 05-super-speed/brief.md: name an owner who also watches week one, with a rollback trigger and
+    a ceiling for The Gale.
